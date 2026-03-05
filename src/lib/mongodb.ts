@@ -1,44 +1,48 @@
 import { MongoClient, Db, Collection, Document as MongoDocument } from 'mongodb'
 
-const uri = process.env.MONGODB_URI || ''
-const options = {}
+const uri = process.env.MONGODB_URI || '';
+const options = {};
 
-let client: MongoClient | null = null
-let clientPromise: Promise<MongoClient> | null = null
+let client: MongoClient | null = null;
+let clientPromise: Promise<MongoClient> | null = null;
 
-if (!uri) {
-  if (process.env.NODE_ENV === 'production' && typeof window === 'undefined') {
-    console.warn('⚠️ MONGODB_URI is missing. Database features will be unavailable.')
-  }
-} else {
+if (uri) {
   if (process.env.NODE_ENV === 'development') {
     let globalWithMongo = global as typeof global & {
-      _mongoClientPromise?: Promise<MongoClient>
-    }
-
+      _mongoClientPromise?: Promise<MongoClient>;
+    };
     if (!globalWithMongo._mongoClientPromise) {
-      client = new MongoClient(uri, options)
-      globalWithMongo._mongoClientPromise = client.connect()
+      client = new MongoClient(uri, options);
+      globalWithMongo._mongoClientPromise = client.connect();
     }
-    clientPromise = globalWithMongo._mongoClientPromise
+    clientPromise = globalWithMongo._mongoClientPromise;
   } else {
-    client = new MongoClient(uri, options)
-    clientPromise = client.connect()
+    client = new MongoClient(uri, options);
+    clientPromise = client.connect();
   }
 }
 
 export async function getDatabase(): Promise<Db> {
-  if (!clientPromise) {
-    throw new Error('MONGODB_URI is not defined')
+  const dbUri = process.env.MONGODB_URI;
+  if (!dbUri) {
+    throw new Error('MONGODB_URI is not defined in environment variables');
   }
-  const client = await clientPromise
-  return client.db(process.env.MONGODB_DB || 'document-archiver')
+
+  if (!clientPromise) {
+    const newClient = new MongoClient(dbUri, options);
+    clientPromise = newClient.connect();
+  }
+
+  const connectedClient = await clientPromise;
+  return connectedClient.db(process.env.MONGODB_DB || 'document-archiver');
 }
 
 export async function getCollection<T extends MongoDocument>(name: string): Promise<Collection<T>> {
-  const db = await getDatabase()
-  return db.collection<T>(name)
+  const db = await getDatabase();
+  return db.collection<T>(name);
 }
+
+export default clientPromise as Promise<MongoClient>;
 
 // Types for MongoDB documents
 export interface UserDocument {
