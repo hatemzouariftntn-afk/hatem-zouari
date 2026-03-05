@@ -1,85 +1,37 @@
 import { MongoClient, Db, Collection, Document as MongoDocument } from 'mongodb'
 
-const uri = process.env.MONGODB_URI || '';
-const options = {};
+const options = {}
 
-let client: MongoClient | null = null;
-let clientPromise: Promise<MongoClient> | null = null;
-
-if (uri) {
-  if (process.env.NODE_ENV === 'development') {
-    let globalWithMongo = global as typeof global & {
-      _mongoClientPromise?: Promise<MongoClient>;
-    };
-    if (!globalWithMongo._mongoClientPromise) {
-      client = new MongoClient(uri, options);
-      globalWithMongo._mongoClientPromise = client.connect();
-    }
-    clientPromise = globalWithMongo._mongoClientPromise;
-  } else {
-    client = new MongoClient(uri, options);
-    clientPromise = client.connect();
-  }
-}
+let client: MongoClient | null = null
+let clientPromise: Promise<MongoClient> | null = null
 
 export async function getDatabase(): Promise<Db> {
-  const dbUri = process.env.MONGODB_URI;
-  if (!dbUri) {
-    throw new Error('MONGODB_URI is not defined in environment variables');
+  const uri = process.env.MONGODB_URI
+  if (!uri) {
+    throw new Error('MONGODB_URI is not defined')
   }
 
   if (!clientPromise) {
-    const newClient = new MongoClient(dbUri, options);
-    clientPromise = newClient.connect();
+    client = new MongoClient(uri, options)
+    clientPromise = client.connect()
   }
 
-  const connectedClient = await clientPromise;
-  return connectedClient.db(process.env.MONGODB_DB || 'document-archiver');
+  const connectedClient = await clientPromise
+  return connectedClient.db(process.env.MONGODB_DB || 'document-archiver')
 }
 
 export async function getCollection<T extends MongoDocument>(name: string): Promise<Collection<T>> {
-  const db = await getDatabase();
-  return db.collection<T>(name);
+  const db = await getDatabase()
+  return db.collection<T>(name)
 }
 
-export default clientPromise as Promise<MongoClient>;
-
-// Types for MongoDB documents
-export interface UserDocument {
-  _id?: any
-  email: string
-  name: string
-  password: string
-  role: 'user' | 'admin'
-  createdAt: Date
-  updatedAt: Date
-}
-
-export interface DocumentDocument {
-  _id?: any
-  title: string
-  content: string
-  tags: string[] | null
-  category: string
-  userId: string
-  createdAt: Date
-  updatedAt: Date
-  mimeType?: string | null
-  originalFileName?: string | null
-}
-
-export interface CategoryDocument {
-  _id?: any
-  name: string
-  userId?: string | null
-  createdAt: Date
-}
-
-export interface BackupDocument {
-  _id?: any
-  userId: string
-  data: any
-  backupType: 'full' | 'incremental'
-  createdAt: Date
-  size: number
-}
+// نسمح بتصدير الـ promise للاستخدام في NextAuth
+export default (async () => {
+  const uri = process.env.MONGODB_URI
+  if (!uri) return null as any
+  if (!clientPromise) {
+    client = new MongoClient(uri, options)
+    clientPromise = client.connect()
+  }
+  return clientPromise
+})()

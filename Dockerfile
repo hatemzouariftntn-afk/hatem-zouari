@@ -1,4 +1,3 @@
-# استخدام Node.js 18 LTS
 FROM node:18-alpine AS base
 
 # إعدادات العمل
@@ -8,17 +7,20 @@ WORKDIR /app
 COPY package*.json ./
 
 # تثبيت التبعيات
-RUN npm ci --only=production
+RUN npm install
 
 # نسخ باقي الملفات
 COPY . .
 
-# بناء التطبيق
+# تعطيل التحقق من قاعدة البيانات أثناء البناء
+ENV MONGODB_URI="mongodb://localhost:27017/dummy"
 RUN npm run build
 
-# إعدادات المنفذ لـ Render
+# إعدادات التشغيل لـ Render
 ENV PORT 10000
-ENV HOSTNAME "0.0.0.0"
+ENV NODE_ENV production
 
-# أمر التشغيل (الأمثل لـ standalone)
-CMD ["node", ".next/standalone/server.js"]
+EXPOSE 10000
+
+# أمر التشغيل المعياري لـ Next.js
+CMD ["npm", "start"]
