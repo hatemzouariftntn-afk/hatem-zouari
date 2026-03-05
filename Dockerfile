@@ -16,8 +16,9 @@ COPY . .
 # بناء التطبيق
 RUN npm run build
 
-# كشف المنفذ
-EXPOSE 3000
+# إعدادات المنفذ لـ Render
+ENV PORT 10000
+ENV HOSTNAME "0.0.0.0"
 
-# أمر التشغيل
-CMD ["npm", "start"]
+# أمر التشغيل (الأمثل لـ standalone)
+CMD ["node", ".next/standalone/server.js"]
