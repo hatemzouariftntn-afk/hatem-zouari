@@ -1,8 +1,9 @@
 'use server';
 
 import { z } from 'zod';
-import { db } from '@/lib/db';
+import { mongoDB } from '@/lib/mongodb-db';
 import { Document } from '@/types';
+import { revalidatePath } from 'next/cache';
 
 const documentSchema = z.object({
   title: z.string().min(1, 'العنوان مطلوب'),
@@ -30,17 +31,16 @@ export async function createDocument(formData: FormData) {
       ? validatedData.tags.split(',').map(tag => tag.trim()).filter(Boolean)
       : [];
 
-    const newDocument = await db.insertDocument({
+    const newDocument = await mongoDB.insertDocument({
       title: validatedData.title,
       content: validatedData.content,
       tags: tagsArray.length > 0 ? tagsArray : null,
       category: validatedData.category || 'عام',
-      createdAt: Math.floor(Date.now() / 1000),
-      updatedAt: Math.floor(Date.now() / 1000),
       mimeType: validatedData.mimeType || null,
       originalFileName: validatedData.originalFileName || null,
     });
 
+    revalidatePath('/');
     return { success: true, document: newDocument };
   } catch (error: any) {
     console.error('خطأ في إنشاء المستند:', error);
@@ -65,18 +65,18 @@ export async function updateDocument(id: string, formData: FormData) {
       ? validatedData.tags.split(',').map(tag => tag.trim()).filter(Boolean)
       : [];
 
-    const updatedDocument = await db.updateDocument(id, {
+    const updatedDocument = await mongoDB.updateDocument(id, {
       title: validatedData.title,
       content: validatedData.content,
       tags: tagsArray.length > 0 ? tagsArray : null,
       category: validatedData.category || 'عام',
-      updatedAt: Math.floor(Date.now() / 1000),
       mimeType: validatedData.mimeType || null,
       originalFileName: validatedData.originalFileName || null,
     });
 
+    revalidatePath('/');
     return { success: true, document: updatedDocument };
-  } catch (error) {
+  } catch (error: any) {
     console.error('خطأ في تحديث المستند:', error);
     return { success: false, error: 'فشل في تحديث المستند' };
   }
@@ -84,7 +84,8 @@ export async function updateDocument(id: string, formData: FormData) {
 
 export async function deleteDocument(id: string) {
   try {
-    const result = await db.deleteDocument(id);
+    const result = await mongoDB.deleteDocument(id);
+    revalidatePath('/');
     return { success: result };
   } catch (error) {
     console.error('خطأ في حذف المستند:', error);
@@ -94,7 +95,7 @@ export async function deleteDocument(id: string) {
 
 export async function getDocument(id: string) {
   try {
-    const document = await db.getDocument(id);
+    const document = await mongoDB.getDocument(id);
 
     if (!document) {
       return { success: false, error: 'المستند غير موجود' };
@@ -109,7 +110,7 @@ export async function getDocument(id: string) {
 
 export async function listDocuments() {
   try {
-    const documents = await db.getAllDocuments();
+    const documents = await mongoDB.getAllDocuments();
     return { success: true, documents };
   } catch (error) {
     console.error('خطأ في جلب المستندات:', error);
@@ -119,7 +120,7 @@ export async function listDocuments() {
 
 export async function searchDocuments(query: string, category?: string) {
   try {
-    let documents = await db.getAllDocuments();
+    let documents = await mongoDB.getAllDocuments();
 
     if (query) {
       documents = documents.filter(doc =>
@@ -176,4 +177,3 @@ export async function bulkImportDocuments(documentsData: Array<{
     return { success: false, error: 'فشل في الاستيراد الجماعي' };
   }
 }
-

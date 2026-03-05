@@ -13,8 +13,6 @@ export class MongoDBDatabase {
   // Documents Operations
   async getAllDocuments(): Promise<Document[]> {
     const userId = await this.getCurrentUserId()
-    if (!userId) return []
-
     const collection = await getCollection<DocumentDocument>('documents')
     const documents = await collection.find({ userId }).sort({ createdAt: -1 }).toArray()
 
@@ -33,8 +31,6 @@ export class MongoDBDatabase {
 
   async getDocument(id: string): Promise<Document | null> {
     const userId = await this.getCurrentUserId()
-    if (!userId) return null
-
     const collection = await getCollection<DocumentDocument>('documents')
     const doc = await collection.findOne({ _id: new ObjectId(id), userId })
 
@@ -55,8 +51,6 @@ export class MongoDBDatabase {
 
   async insertDocument(values: Partial<Document>): Promise<Document> {
     const userId = await this.getCurrentUserId()
-    if (!userId) throw new Error('User not authenticated')
-
     const collection = await getCollection<DocumentDocument>('documents')
     const now = new Date()
 
@@ -92,8 +86,6 @@ export class MongoDBDatabase {
 
   async updateDocument(id: string, values: Partial<Document>): Promise<Document | null> {
     const userId = await this.getCurrentUserId()
-    if (!userId) return null
-
     const collection = await getCollection<DocumentDocument>('documents')
     const now = new Date()
 
@@ -129,8 +121,7 @@ export class MongoDBDatabase {
   }
 
   async deleteDocument(id: string): Promise<boolean> {
-    const userId = (await this.getCurrentUserId()) || 'anonymous'
-
+    const userId = await this.getCurrentUserId()
     const collection = await getCollection<DocumentDocument>('documents')
     const result = await collection.deleteOne({ _id: new ObjectId(id), userId })
 
@@ -139,8 +130,6 @@ export class MongoDBDatabase {
 
   async getDocumentsByCategory(category: string): Promise<Document[]> {
     const userId = await this.getCurrentUserId()
-    if (!userId) return []
-
     const collection = await getCollection<DocumentDocument>('documents')
     const documents = await collection.find({ userId, category }).sort({ createdAt: -1 }).toArray()
 
@@ -160,8 +149,6 @@ export class MongoDBDatabase {
   // Categories Operations
   async getAllCategories(): Promise<Category[]> {
     const userId = await this.getCurrentUserId()
-    console.log('🔍 getCurrentUserId result:', userId)
-
     const collection = await getCollection<CategoryDocument>('categories')
 
     // Ensure default categories exist (at least for global/null)
@@ -175,16 +162,11 @@ export class MongoDBDatabase {
       ]
     }).sort({ name: 1 }).toArray()
 
-    console.log('📂 Raw categories from MongoDB:', categories)
-
-    const result = categories.map(cat => ({
+    return categories.map(cat => ({
       id: cat._id.toString(),
       name: cat.name,
       user_id: cat.userId || null
     }))
-
-    console.log('✅ Final categories result:', result)
-    return result
   }
 
   // Helper method to ensure default categories exist
@@ -236,8 +218,6 @@ export class MongoDBDatabase {
   // Tags Operations (extracted from documents)
   async getAllTags(): Promise<Tag[]> {
     const userId = await this.getCurrentUserId()
-    if (!userId) return []
-
     const collection = await getCollection<DocumentDocument>('documents')
     const documents = await collection.find({ userId, tags: { $ne: null, $exists: true } }).toArray()
 
@@ -254,8 +234,6 @@ export class MongoDBDatabase {
   // Backup Operations
   async createBackup(type: 'full' | 'incremental' = 'full'): Promise<void> {
     const userId = await this.getCurrentUserId()
-    if (!userId) throw new Error('User not authenticated')
-
     const documents = await this.getAllDocuments()
     const categories = await this.getAllCategories()
 
@@ -278,16 +256,12 @@ export class MongoDBDatabase {
 
   async getBackups(): Promise<BackupDocument[]> {
     const userId = await this.getCurrentUserId()
-    if (!userId) return []
-
     const collection = await getCollection<BackupDocument>('backups')
     return collection.find({ userId }).sort({ createdAt: -1 }).toArray()
   }
 
   async restoreBackup(backupId: string): Promise<void> {
     const userId = await this.getCurrentUserId()
-    if (!userId) throw new Error('User not authenticated')
-
     const backupCollection = await getCollection<BackupDocument>('backups')
     const backup = await backupCollection.findOne({ _id: new ObjectId(backupId), userId })
 
