@@ -109,3 +109,9 @@ dist
 tmp/
 temp/
 
+# Electron build output
+dist-build/
+
+# Local database
+db.json
+
