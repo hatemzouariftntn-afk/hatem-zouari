@@ -27,7 +27,7 @@ export async function getCollection<T extends MongoDocument>(name: string): Prom
 
 // Interfaces for MongoDB documents
 export interface UserDocument extends MongoDocument {
-  _id: ObjectId
+  _id?: ObjectId
   email: string
   password: string
   name: string
@@ -36,7 +36,7 @@ export interface UserDocument extends MongoDocument {
 }
 
 export interface DocumentDocument extends MongoDocument {
-  _id: ObjectId
+  _id?: ObjectId
   title: string
   content: string
   tags: string[] | null
@@ -49,14 +49,14 @@ export interface DocumentDocument extends MongoDocument {
 }
 
 export interface CategoryDocument extends MongoDocument {
-  _id: ObjectId
+  _id?: ObjectId
   name: string
   userId: string | null
   createdAt: Date
 }
 
 export interface BackupDocument extends MongoDocument {
-  _id: ObjectId
+  _id?: ObjectId
   userId: string
   data: any
   backupType: 'full' | 'incremental'
