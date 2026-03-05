@@ -4,8 +4,9 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import { MongoClient } from 'mongodb'
 import { z } from 'zod'
 
-const client = new MongoClient(process.env.MONGODB_URI!)
-const clientPromise = client.connect()
+const mongoUri = process.env.MONGODB_URI;
+const client = mongoUri ? new MongoClient(mongoUri) : null;
+const clientPromise = client ? client.connect() : Promise.resolve(null as any);
 
 const credentialsSchema = z.object({
   email: z.string().email(),
@@ -79,8 +80,8 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        ;(token as any).id = (user as any).id
-        ;(token as any).role = (user as any).role
+        ; (token as any).id = (user as any).id
+          ; (token as any).role = (user as any).role
         console.log('🔐 JWT callback - user:', user)
         console.log('🔐 JWT callback - token after update:', token)
       }
@@ -92,8 +93,8 @@ export const authOptions: NextAuthOptions = {
 
       const id = (token as any)?.id
       if (id) {
-        ;(session.user as any).id = id
-        ;(session.user as any).role = (token as any)?.role
+        ; (session.user as any).id = id
+          ; (session.user as any).role = (token as any)?.role
         console.log('🔐 Session callback - session after:', session)
       }
 

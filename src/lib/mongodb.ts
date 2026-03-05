@@ -1,10 +1,10 @@
 import { MongoClient, Db, Collection, Document as MongoDocument } from 'mongodb'
 
-if (!process.env.MONGODB_URI) {
-  throw new Error('Please add your MongoDB URI to .env.local')
-}
+const uri = process.env.MONGODB_URI || ''
 
-const uri = process.env.MONGODB_URI
+if (!uri && process.env.NODE_ENV === 'production' && typeof window === 'undefined') {
+  console.warn('⚠️ MONGODB_URI is missing during build time. Ignoring for now...')
+}
 const options = {}
 
 let client: MongoClient
