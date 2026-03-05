@@ -6,8 +6,8 @@ import { ObjectId } from 'mongodb'
 // MongoDB Database Operations
 export class MongoDBDatabase {
   // Get current user ID from session
-  private async getCurrentUserId(): Promise<string | null> {
-    return await getCurrentUserId()
+  private async getCurrentUserId(): Promise<string> {
+    return (await getCurrentUserId()) || 'anonymous'
   }
 
   // Documents Operations
@@ -129,8 +129,7 @@ export class MongoDBDatabase {
   }
 
   async deleteDocument(id: string): Promise<boolean> {
-    const userId = await this.getCurrentUserId()
-    if (!userId) return false
+    const userId = (await this.getCurrentUserId()) || 'anonymous'
 
     const collection = await getCollection<DocumentDocument>('documents')
     const result = await collection.deleteOne({ _id: new ObjectId(id), userId })

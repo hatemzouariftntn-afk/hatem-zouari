@@ -26,7 +26,7 @@ export async function createDocument(formData: FormData) {
 
     const validatedData = documentSchema.parse(rawData);
 
-    const tagsArray = validatedData.tags 
+    const tagsArray = validatedData.tags
       ? validatedData.tags.split(',').map(tag => tag.trim()).filter(Boolean)
       : [];
 
@@ -42,9 +42,9 @@ export async function createDocument(formData: FormData) {
     });
 
     return { success: true, document: newDocument };
-  } catch (error) {
+  } catch (error: any) {
     console.error('خطأ في إنشاء المستند:', error);
-    return { success: false, error: 'فشل في إنشاء المستند' };
+    return { success: false, error: error.message || 'فشل في إنشاء المستند' };
   }
 }
 
@@ -95,7 +95,7 @@ export async function deleteDocument(id: string) {
 export async function getDocument(id: string) {
   try {
     const document = await db.getDocument(id);
-    
+
     if (!document) {
       return { success: false, error: 'المستند غير موجود' };
     }
