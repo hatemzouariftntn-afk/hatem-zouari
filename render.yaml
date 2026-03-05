@@ -1,22 +1,20 @@
 services:
-  # Next.js Web Service
   - type: web
     name: document-archiver
-    env: node
-    buildCommand: "npm run build"
+    runtime: node
+    buildCommand: "npm install && npm run build"
     startCommand: "npm start"
-    nodeVersion: "18"
     envVars:
       - key: NODE_ENV
         value: production
+      - key: MONGODB_URI
+        sync: false  # ستُضاف يدوياً من لوحة تحكم Render
+      - key: MONGODB_DB
+        value: document-archiver
+      - key: NEXTAUTH_SECRET
+        sync: false  # ستُضاف يدوياً من لوحة تحكم Render
+      - key: NEXTAUTH_URL
+        sync: false  # ستُضاف يدوياً بعد معرفة الرابط
     healthCheckPath: /
     autoDeploy: true
-    plan: free
-    
-  # Static Asset Service (إذا كان هناك ملفات ثابتة)
-  - type: web
-    name: document-archiver-assets
-    env: static
-    buildCommand: "true"
-    staticPublishPath: ./public
     plan: free

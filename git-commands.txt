@@ -1,0 +1,13 @@
+# Execute these commands after creating your GitHub repository
+# Replace YOUR_USERNAME with your actual GitHub username
+
+# Step 1: Add remote repository
+git remote add origin https://github.com/YOUR_USERNAME/document-archiver-ftn.git
+
+# Step 2: Rename branch to main (if not already main)
+git branch -M main
+
+# Step 3: Push to GitHub
+git push -u origin main
+
+# After these commands, your code will be on GitHub and ready for Render deployment
