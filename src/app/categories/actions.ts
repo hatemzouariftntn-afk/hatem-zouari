@@ -1,3 +1,5 @@
+'use server';
+
 import { mongoDB } from '@/lib/mongodb-db';
 
 export async function listCategories() {
