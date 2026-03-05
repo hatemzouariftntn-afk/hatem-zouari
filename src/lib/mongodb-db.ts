@@ -1,4 +1,4 @@
-import { getCollection, DocumentDocument, CategoryDocument, UserDocument, BackupDocument } from './mongodb'
+import { getCollection, DocumentDocument, CategoryDocument, UserDocument, BackupDocument, MongoDocument } from './mongodb'
 import { getCurrentUserId } from './auth-helpers'
 import { Document, Category, Tag } from '@/types'
 import { ObjectId } from 'mongodb'
@@ -17,7 +17,7 @@ export class MongoDBDatabase {
 
     const collection = await getCollection<DocumentDocument>('documents')
     const documents = await collection.find({ userId }).sort({ createdAt: -1 }).toArray()
-    
+
     return documents.map(doc => ({
       id: doc._id.toString(),
       title: doc.title,
@@ -37,9 +37,9 @@ export class MongoDBDatabase {
 
     const collection = await getCollection<DocumentDocument>('documents')
     const doc = await collection.findOne({ _id: new ObjectId(id), userId })
-    
+
     if (!doc) return null
-    
+
     return {
       id: doc._id.toString(),
       title: doc.title,
@@ -59,7 +59,7 @@ export class MongoDBDatabase {
 
     const collection = await getCollection<DocumentDocument>('documents')
     const now = new Date()
-    
+
     const newDocument: Omit<DocumentDocument, '_id'> = {
       title: values.title || '',
       content: values.content || '',
@@ -74,9 +74,9 @@ export class MongoDBDatabase {
 
     const result = await collection.insertOne(newDocument as DocumentDocument)
     const insertedDoc = await collection.findOne({ _id: result.insertedId })
-    
+
     if (!insertedDoc) throw new Error('Failed to insert document')
-    
+
     return {
       id: insertedDoc._id.toString(),
       title: insertedDoc.title,
@@ -96,7 +96,7 @@ export class MongoDBDatabase {
 
     const collection = await getCollection<DocumentDocument>('documents')
     const now = new Date()
-    
+
     const updateData: Partial<DocumentDocument> = {
       title: values.title,
       content: values.content,
@@ -114,7 +114,7 @@ export class MongoDBDatabase {
     )
 
     if (!result.value) return null
-    
+
     return {
       id: result.value._id.toString(),
       title: result.value.title,
@@ -134,7 +134,7 @@ export class MongoDBDatabase {
 
     const collection = await getCollection<DocumentDocument>('documents')
     const result = await collection.deleteOne({ _id: new ObjectId(id), userId })
-    
+
     return result.deletedCount > 0
   }
 
@@ -144,7 +144,7 @@ export class MongoDBDatabase {
 
     const collection = await getCollection<DocumentDocument>('documents')
     const documents = await collection.find({ userId, category }).sort({ createdAt: -1 }).toArray()
-    
+
     return documents.map(doc => ({
       id: doc._id.toString(),
       title: doc.title,
@@ -162,58 +162,76 @@ export class MongoDBDatabase {
   async getAllCategories(): Promise<Category[]> {
     const userId = await this.getCurrentUserId()
     console.log('🔍 getCurrentUserId result:', userId)
-    
+
     const collection = await getCollection<CategoryDocument>('categories')
-    
-    // First, ensure default categories exist for this user
-    if (userId) {
-      console.log('📝 Ensuring default categories for user:', userId)
-      await this.ensureDefaultCategories(userId)
-    } else {
-      console.log('⚠️ No user ID found, skipping default categories')
-    }
-    
+
+    // Ensure default categories exist (at least for global/null)
+    await this.ensureDefaultCategories(userId || 'global')
+
     const categories = await collection.find({
       $or: [
         { userId: userId },
-        { userId: null }
+        { userId: null },
+        { userId: 'global' }
       ]
     }).sort({ name: 1 }).toArray()
-    
+
     console.log('📂 Raw categories from MongoDB:', categories)
-    
+
     const result = categories.map(cat => ({
       id: cat._id.toString(),
       name: cat.name,
       user_id: cat.userId || null
     }))
-    
+
     console.log('✅ Final categories result:', result)
     return result
   }
 
   // Helper method to ensure default categories exist
   private async ensureDefaultCategories(userId: string | null) {
-    if (!userId) return
-    
     const collection = await getCollection<CategoryDocument>('categories')
-    
+
     const defaultCategories = [
-      "عام", "فواتير", "عقود", "مستندات شخصية", "الوزارة", 
-      "النوادي", "اللجنة الاولمبية", "المسابقات", 
+      "عام", "فواتير", "عقود", "مستندات شخصية", "الوزارة",
+      "النوادي", "اللجنة الاولمبية", "المسابقات",
       "الحي الوطني الرياضي", "شكاوي", "الادارة", "ملاحظات"
     ]
-    
+
     for (const catName of defaultCategories) {
-      const existing = await collection.findOne({ name: catName, userId })
+      const existing = await collection.findOne({ name: catName, userId: userId === 'global' ? 'global' : userId })
       if (!existing) {
         await collection.insertOne({
           name: catName,
-          userId,
+          userId: userId === 'global' ? 'global' : userId,
           createdAt: new Date()
         })
       }
     }
+  }
+
+  // Add new category
+  async insertCategory(name: string): Promise<Category> {
+    const userId = await this.getCurrentUserId()
+    const collection = await getCollection<CategoryDocument>('categories')
+
+    const newCategory: Omit<CategoryDocument, '_id'> = {
+      name: name.trim(),
+      userId: userId || 'global',
+      createdAt: new Date()
+    }
+
+    const result = await collection.insertOne(newCategory as CategoryDocument)
+    return {
+      id: result.insertedId.toString(),
+      name: newCategory.name,
+      user_id: newCategory.userId
+    }
+  }
+
+  // Expose getCollection for actions
+  async getCollection<T extends MongoDocument>(name: string) {
+    return getCollection<T>(name)
   }
 
   // Tags Operations (extracted from documents)
@@ -223,11 +241,11 @@ export class MongoDBDatabase {
 
     const collection = await getCollection<DocumentDocument>('documents')
     const documents = await collection.find({ userId, tags: { $ne: null, $exists: true } }).toArray()
-    
+
     const allTags = documents
       .flatMap(doc => doc.tags || [])
       .filter((tag, index, arr) => arr.indexOf(tag) === index)
-    
+
     return allTags.map((tag, index) => ({
       id: index + 1,
       name: tag
@@ -241,7 +259,7 @@ export class MongoDBDatabase {
 
     const documents = await this.getAllDocuments()
     const categories = await this.getAllCategories()
-    
+
     const backupData = {
       documents,
       categories,
@@ -273,7 +291,7 @@ export class MongoDBDatabase {
 
     const backupCollection = await getCollection<BackupDocument>('backups')
     const backup = await backupCollection.findOne({ _id: new ObjectId(backupId), userId })
-    
+
     if (!backup) throw new Error('Backup not found')
 
     const { documents, categories } = backup.data

@@ -1,10 +1,8 @@
-'use server';
-
-import { db } from '@/lib/db';
+import { mongoDB } from '@/lib/mongodb-db';
 
 export async function listCategories() {
   try {
-    const categories = await db.getAllCategories();
+    const categories = await mongoDB.getAllCategories();
     return { success: true, categories };
   } catch (error) {
     console.error('خطأ في جلب الفئات:', error);
@@ -14,11 +12,14 @@ export async function listCategories() {
 
 export async function addCategory(name: string) {
   try {
-    // هذه الوظيفة يمكن تطويرها لاحقًا لإضافة فئات جديدة
-    return { success: false, error: 'إضافة الفئات غير مدعومة حاليًا' };
+    if (!name || name.trim() === '') {
+      return { success: false, error: 'اسم الفئة مطلوب' };
+    }
+
+    const category = await mongoDB.insertCategory(name);
+    return { success: true, category };
   } catch (error) {
     console.error('خطأ في إضافة الفئة:', error);
     return { success: false, error: 'فشل في إضافة الفئة' };
   }
 }
-

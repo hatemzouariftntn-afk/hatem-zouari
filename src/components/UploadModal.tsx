@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import JSZip from 'jszip';
-import { listCategories } from '@/app/categories/actions';
+import { listCategories, addCategory } from '@/app/categories/actions';
 import { createDocument, bulkImportDocuments } from '@/app/documents/actions';
 import { Category } from '@/types';
 
@@ -26,6 +26,8 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUploadSucc
   const [tags, setTags] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
   const [isBulkImport, setIsBulkImport] = useState(false);
   const [bulkDocuments, setBulkDocuments] = useState<Array<{
     title: string;
@@ -58,7 +60,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUploadSucc
         }
       };
       fetchCategories();
-      
+
       // Reset form state
       setSelectedFile(null);
       setTitle('');
@@ -145,6 +147,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUploadSucc
   };
 
   const getMimeType = (filename: string): string => {
+    // ... logic remains same
     const ext = filename.split('.').pop()?.toLowerCase();
     const mimeTypes: { [key: string]: string } = {
       'txt': 'text/plain',
@@ -159,6 +162,30 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUploadSucc
       'gif': 'image/gif'
     };
     return mimeTypes[ext || ''] || 'application/octet-stream';
+  };
+
+  const handleAddCategory = async () => {
+    if (!newCategoryName.trim()) return;
+
+    setIsLoading(true);
+    try {
+      const result = await addCategory(newCategoryName.trim());
+      if (result.success) {
+        const fetchResult = await listCategories();
+        if (fetchResult.success) {
+          setCategories(fetchResult.categories || []);
+          setSelectedCategory(newCategoryName.trim());
+          setNewCategoryName('');
+          setShowAddCategory(false);
+        }
+      } else {
+        setError(result.error || 'فشل في إضافة الفئة');
+      }
+    } catch (err) {
+      setError('حدث خطأ في إضافة الفئة');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -227,9 +254,9 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUploadSucc
       <div className="modal-content">
         <div className="modal-header">
           <h2 className="modal-title">إضافة مستند جديد</h2>
-          <button 
-            type="button" 
-            className="close-btn" 
+          <button
+            type="button"
+            className="close-btn"
             onClick={onClose}
             disabled={isLoading}
           >
@@ -337,22 +364,53 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUploadSucc
               </div>
 
               <div className="form-group">
-                <label htmlFor="category" className="form-label">
-                  الفئة
+                <label htmlFor="category" className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>الفئة</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddCategory(!showAddCategory)}
+                    className="text-btn"
+                    style={{ fontSize: '0.85rem', color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer' }}
+                  >
+                    {showAddCategory ? '- إلغاء' : '+ إضافة فئة جديدة'}
+                  </button>
                 </label>
-                <select
-                  id="category"
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="form-control"
-                  disabled={isLoading}
-                >
-                  {categories.map(category => (
-                    <option key={category.id} value={category.name}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
+
+                {showAddCategory ? (
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input
+                      type="text"
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      className="form-control"
+                      placeholder="اسم الفئة الجديدة"
+                      disabled={isLoading}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddCategory}
+                      className="btn btn-secondary"
+                      disabled={isLoading || !newCategoryName.trim()}
+                    >
+                      إضافة
+                    </button>
+                  </div>
+                ) : (
+                  <select
+                    id="category"
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="form-control"
+                    disabled={isLoading}
+                  >
+                    {categories.length === 0 && <option value="">لا توجد فئات</option>}
+                    {categories.map(category => (
+                      <option key={category.id} value={category.name}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div className="form-group">

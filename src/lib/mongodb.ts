@@ -1,4 +1,5 @@
 import { MongoClient, Db, Collection, Document as MongoDocument, ObjectId } from 'mongodb'
+export type { MongoDocument }
 
 const options = {}
 
