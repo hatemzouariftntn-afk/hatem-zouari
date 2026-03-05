@@ -1,0 +1,91 @@
+{
+  "documents": [
+    {
+      "id": 1,
+      "title": "قائمة_البداية (1)",
+      "content": "hatem",
+      "tags": "",
+      "category": "فواتير",
+      "createdAt": 1760203159,
+      "updatedAt": 1760203,
+      "mimeType": null,
+      "originalFileName": null
+    },
+    {
+      "id": 2,
+      "title": "swimming_competition_system_UPDATED",
+      "content": "folder",
+      "tags": "",
+      "category": "اللجنة الاولمبية",
+      "createdAt": 1760203159,
+      "updatedAt": 1760204,
+      "mimeType": null,
+      "originalFileName": null
+    }
+  ],
+  "tags": [],
+  "categories": [
+    {
+      "id": 1,
+      "name": "عام",
+      "user_id": null
+    },
+    {
+      "id": 2,
+      "name": "فواتير",
+      "user_id": null
+    },
+    {
+      "id": 3,
+      "name": "عقود",
+      "user_id": null
+    },
+    {
+      "id": 4,
+      "name": "مستندات شخصية",
+      "user_id": null
+    },
+    {
+      "id": 5,
+      "name": "الوزارة",
+      "user_id": null
+    },
+    {
+      "id": 6,
+      "name": "النوادي",
+      "user_id": null
+    },
+    {
+      "id": 7,
+      "name": "اللجنة الاولمبية",
+      "user_id": null
+    },
+    {
+      "id": 8,
+      "name": "المسابقات",
+      "user_id": null
+    },
+    {
+      "id": 9,
+      "name": "الحي الوطني الرياضي",
+      "user_id": null
+    },
+    {
+      "id": 10,
+      "name": "شكاوي",
+      "user_id": null
+    },
+    {
+      "id": 11,
+      "name": "الادارة",
+      "user_id": null
+    },
+    {
+      "id": 12,
+      "name": "ملاحظات",
+      "user_id": null
+    }
+  ],
+  "lastId": 2,
+  "timestampsUpdated": true
+}

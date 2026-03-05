@@ -1,0 +1,21 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "KHTML",
+    "documentarchiver",
+    "asar",
+    "nsis",
+    "lowdb",
+    "jszip",
+    "nextjs",
+    "electron-builder",
+    "afterPack"
+  ],
+  "ignorePaths": [
+    "node_modules",
+    "dist-build",
+    ".next",
+    "package-lock.json"
+  ]
+}

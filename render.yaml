@@ -1,0 +1,22 @@
+services:
+  # Next.js Web Service
+  - type: web
+    name: document-archiver
+    env: node
+    buildCommand: "npm run build"
+    startCommand: "npm start"
+    nodeVersion: "18"
+    envVars:
+      - key: NODE_ENV
+        value: production
+    healthCheckPath: /
+    autoDeploy: true
+    plan: free
+    
+  # Static Asset Service (إذا كان هناك ملفات ثابتة)
+  - type: web
+    name: document-archiver-assets
+    env: static
+    buildCommand: "true"
+    staticPublishPath: ./public
+    plan: free
