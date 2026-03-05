@@ -1,4 +1,4 @@
-import { MongoClient, Db, Collection, Document as MongoDocument } from 'mongodb'
+import { MongoClient, Db, Collection, Document as MongoDocument, ObjectId } from 'mongodb'
 
 const options = {}
 
@@ -25,7 +25,46 @@ export async function getCollection<T extends MongoDocument>(name: string): Prom
   return db.collection<T>(name)
 }
 
-// نسمح بتصدير الـ promise للاستخدام في NextAuth
+// Interfaces for MongoDB documents
+export interface UserDocument extends MongoDocument {
+  _id: ObjectId
+  email: string
+  password: string
+  name: string
+  role: string
+  createdAt: Date
+}
+
+export interface DocumentDocument extends MongoDocument {
+  _id: ObjectId
+  title: string
+  content: string
+  tags: string[] | null
+  category: string
+  userId: string
+  createdAt: Date
+  updatedAt: Date
+  mimeType: string | null
+  originalFileName: string | null
+}
+
+export interface CategoryDocument extends MongoDocument {
+  _id: ObjectId
+  name: string
+  userId: string | null
+  createdAt: Date
+}
+
+export interface BackupDocument extends MongoDocument {
+  _id: ObjectId
+  userId: string
+  data: any
+  backupType: 'full' | 'incremental'
+  createdAt: Date
+  size: number
+}
+
+// Export the client promise for NextAuth adapter
 export default (async () => {
   const uri = process.env.MONGODB_URI
   if (!uri) return null as any
