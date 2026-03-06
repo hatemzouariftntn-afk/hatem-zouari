@@ -41,6 +41,16 @@ export async function createDocument(formData: FormData) {
     });
 
     revalidatePath('/');
+
+    // 📩 إرسال إشعار بالبريد الإلكتروني في الخلفية
+    try {
+      const { sendNewDocumentNotification } = await import('@/lib/email-service');
+      // لا نستخدم await هنا لكي لا يعطل إرسال الإيميل عملية الحفظ السريعة
+      sendNewDocumentNotification(validatedData.title, validatedData.category || 'عام');
+    } catch (emailError) {
+      console.warn('⚠️ فشل في إرسال إشعار البريد (تحقق من الإعدادات):', emailError);
+    }
+
     return { success: true, document: newDocument };
   } catch (error: any) {
     console.error('خطأ في إنشاء المستند:', error);
