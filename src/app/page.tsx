@@ -9,8 +9,11 @@ import DetailsModal from '@/components/DetailsModal';
 import DownloadModal from '@/components/DownloadModal';
 import { Document, Category } from '@/types';
 import JSZip from 'jszip';
+import { useSession, signOut } from 'next-auth/react';
+import Link from 'next/link';
 
 export default function HomePage() {
+  const { data: session } = useSession();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -62,10 +65,10 @@ export default function HomePage() {
 
   // Filter documents based on search term and category
   const filteredDocuments = documents.filter(doc => {
-    const matchesQuery = !searchTerm || 
-        doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doc.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doc.tags?.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesQuery = !searchTerm ||
+      doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.tags?.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesCategory = selectedCategory === '' || doc.category === selectedCategory;
 
@@ -242,6 +245,19 @@ export default function HomePage() {
   return (
     <div className="container">
       <header className="header">
+        <div className="user-nav">
+          {session ? (
+            <div className="user-info">
+              <span>مرحباً، {session.user?.name || session.user?.email}</span>
+              <button onClick={() => signOut()} className="btn-link">تسجيل الخروج</button>
+            </div>
+          ) : (
+            <div className="auth-links">
+              <Link href="/auth/signin" className="btn btn-secondary btn-sm">تسجيل الدخول</Link>
+              <Link href="/auth/signup" className="btn btn-primary btn-sm">إنشاء حساب</Link>
+            </div>
+          )}
+        </div>
         <h1>أرشيف المستندات</h1>
         <p className="header-subtitle">
           إدارة وتنظيم مستنداتك بسهولة وأمان

@@ -162,11 +162,20 @@ export class MongoDBDatabase {
       ]
     }).sort({ name: 1 }).toArray()
 
-    return categories.map(cat => ({
-      id: cat._id.toString(),
-      name: cat.name,
-      user_id: cat.userId || null
-    }))
+    // Ensure unique names
+    const uniqueCategories = new Map();
+    categories.forEach(cat => {
+      const name = cat.name.trim();
+      if (!uniqueCategories.has(name)) {
+        uniqueCategories.set(name, {
+          id: cat._id.toString(),
+          name: name,
+          user_id: cat.userId || null
+        });
+      }
+    });
+
+    return Array.from(uniqueCategories.values());
   }
 
   // Helper method to ensure default categories exist
