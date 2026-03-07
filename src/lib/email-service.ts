@@ -19,13 +19,16 @@ export async function sendNewDocumentNotification(docTitle: string, category: st
         return;
     }
 
-    // إنشاء "ناقل" البريد باستخدام إعدادات Gmail
+    // إنشاء "ناقل" البريد باستخدام إعدادات Gmail الصريحة لتجنب الـ Timeout
     const transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true, // استخدام SSL
         auth: {
             user: EMAIL_USER,
             pass: EMAIL_PASS,
         },
+        connectionTimeout: 10000, // 10 ثواني كحد أقصى للاتصال
     });
 
     const mailOptions = {
