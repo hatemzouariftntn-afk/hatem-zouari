@@ -42,11 +42,11 @@ export async function createDocument(formData: FormData) {
 
     revalidatePath('/');
 
-    // 📩 إرسال إشعار بالبريد الإلكتروني في الخلفية
+    // 📩 إرسال إشعار بالبريد الإلكتروني
     try {
       const { sendNewDocumentNotification } = await import('@/lib/email-service');
-      // لا نستخدم await هنا لكي لا يعطل إرسال الإيميل عملية الحفظ السريعة
-      sendNewDocumentNotification(validatedData.title, validatedData.category || 'عام');
+      // سننتظر الإرسال الآن لتجربة نجاح العملية
+      await sendNewDocumentNotification(validatedData.title, validatedData.category || 'عام');
     } catch (emailError) {
       console.warn('⚠️ فشل في إرسال إشعار البريد (تحقق من الإعدادات):', emailError);
     }

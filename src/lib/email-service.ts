@@ -10,8 +10,12 @@ export async function sendNewDocumentNotification(docTitle: string, category: st
     const RECEIVER_EMAIL = process.env.RECEIVER_EMAIL || EMAIL_USER;
 
     // التحقق من وجود الإعدادات
+    console.log('📧 محاولة إرسال بريد تنبيه...');
+    console.log('📧 الإيميل المرسل:', EMAIL_USER);
+    console.log('📧 الإيميل المستلم:', RECEIVER_EMAIL);
+
     if (!EMAIL_USER || !EMAIL_PASS) {
-        console.warn('⚠️ تنبيه: إعدادات البريد الإلكتروني غير مكتملة (NOTIFICATION_EMAIL or NOTIFICATION_PASSWORD)');
+        console.error('❌ خطأ: متغيرات NOTIFICATION_EMAIL أو NOTIFICATION_PASSWORD غير موجودة في إعدادات البيئة');
         return;
     }
 
