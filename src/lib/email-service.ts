@@ -19,16 +19,23 @@ export async function sendNewDocumentNotification(docTitle: string, category: st
         return;
     }
 
-    // إنشاء "ناقل" البريد باستخدام إعدادات Gmail الصريحة لتجنب الـ Timeout
+    // معالجة كلمة السر لإزالة أي مسافات قد تسبب مشاكل في المتغيرات
+    const cleanPassword = EMAIL_PASS.replace(/\s+/g, '');
+
+    // إنشاء "ناقل" البريد باستخدام المنفذ 587 (الأكثر نجاحاً في Render)
     const transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
-        port: 465,
-        secure: true, // استخدام SSL
+        port: 587,
+        secure: false, // يجب أن تكون false للمنفذ 587
         auth: {
             user: EMAIL_USER,
-            pass: EMAIL_PASS,
+            pass: cleanPassword,
         },
-        connectionTimeout: 10000, // 10 ثواني كحد أقصى للاتصال
+        tls: {
+            // لضمان عدم حدوث مشاكل في شهادات الـ SSL داخل الحاويات (Containers)
+            rejectUnauthorized: false
+        },
+        connectionTimeout: 20000, // زيادة وقت الانتظار إلى 20 ثانية
     });
 
     const mailOptions = {
