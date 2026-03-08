@@ -102,10 +102,9 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUploadSucc
 
           for (const [path, zipEntry] of Object.entries(zipData.files)) {
             if (!zipEntry.dir) {
-              const fileData = await zipEntry.async('uint8array');
-              const mimeType = getMimeType(path);
-              const base64 = btoa(Array.from(fileData).map(byte => String.fromCharCode(byte)).join(''));
+              const base64 = await zipEntry.async('base64');
               const title = path.split('/').pop()?.replace(/\.[^/.]+$/, "") || path;
+              const mimeType = getMimeType(path);
 
               documents.push({
                 title,
@@ -132,16 +131,15 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUploadSucc
           setTitle(file.name.replace(/\.[^/.]+$/, ""));
         }
 
-        // Read file as ArrayBuffer and convert to base64 for all file types
+        // Read file as Base64 natively
         const reader = new FileReader();
         reader.onload = (e) => {
-          const arrayBuffer = e.target?.result as ArrayBuffer;
-          const uint8Array = new Uint8Array(arrayBuffer);
-          // Convert to base64
-          const base64 = btoa(Array.from(uint8Array).map(byte => String.fromCharCode(byte)).join(''));
+          const rawResult = e.target?.result as string;
+          // Extract base64 part only
+          const base64 = rawResult.split(',')[1] || rawResult;
           setContent(base64);
         };
-        reader.readAsArrayBuffer(file);
+        reader.readAsDataURL(file);
       }
     }
   };
