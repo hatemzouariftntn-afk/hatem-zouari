@@ -35,6 +35,7 @@ export async function uploadToCloudinary(base64Data: string, mimeType: string, f
         resource_type: resourceType,
         folder: 'document-archiver',
         public_id: publicId,
+        access_mode: 'public', // التأكد من أن الملف يمكن للجميع الوصول إليه لتسهيل التحميل
       }, (error, result) => {
         if (error) reject(error);
         else resolve(result as UploadApiResponse);
