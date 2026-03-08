@@ -31,14 +31,35 @@ export async function createDocument(formData: FormData) {
       ? validatedData.tags.split(',').map(tag => tag.trim()).filter(Boolean)
       : [];
 
+    let finalContent = validatedData.content;
+    
+    // رفع الملف إلى السحابة أو الاحتفاظ به كنص
+    if (validatedData.mimeType && validatedData.originalFileName && process.env.CLOUDINARY_API_SECRET) {
+      console.log('☁️ جاري رفع الملف إلى Cloudinary...');
+      try {
+        const { uploadToCloudinary } = await import('@/lib/cloudinary-service');
+        const uploadRes = await uploadToCloudinary(validatedData.content, validatedData.mimeType, validatedData.originalFileName);
+        
+        if (uploadRes.success && uploadRes.url) {
+          finalContent = uploadRes.url; // استبدال الـ base64 بالرابط السريع والخفيف
+          console.log('✅ تم رفع الملف بنجاح:', finalContent);
+        } else {
+          console.warn('⚠️ فشل الرفع للسحابة، سيتم الحفظ داخلياً:', uploadRes.error);
+        }
+      } catch (err) {
+        console.error('⚠️ خطأ في التخاطب مع Cloudinary:', err);
+      }
+    }
+
     const newDocument = await mongoDB.insertDocument({
       title: validatedData.title,
-      content: validatedData.content,
+      content: finalContent,
       tags: tagsArray.length > 0 ? tagsArray : null,
       category: validatedData.category || 'عام',
       mimeType: validatedData.mimeType || null,
       originalFileName: validatedData.originalFileName || null,
     });
+
 
     revalidatePath('/');
 

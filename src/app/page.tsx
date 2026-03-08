@@ -148,41 +148,48 @@ export default function HomePage() {
     if (format === 'zip') {
       const zip = new JSZip();
 
-      docsToExport.forEach((document) => {
+      for (const document of docsToExport) {
         let fileName: string;
         let content: string | Uint8Array;
 
         if (document.originalFileName) {
-          // Binary file - content is already base64 encoded
           fileName = document.originalFileName;
-          let contentData: Uint8Array | string;
-          try {
-            // Decode base64 to Uint8Array
-            const binaryString = atob(document.content);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-              bytes[i] = binaryString.charCodeAt(i);
+          
+          if (document.content.startsWith('http')) {
+            try {
+              const response = await fetch(document.content);
+              const blob = await response.blob();
+              content = new Uint8Array(await blob.arrayBuffer());
+            } catch (error) {
+              console.error('Failed to fetch cloud file:', error);
+              fileName = `${fileName}_link.txt`;
+              content = `هذا الملف مخزن في السحابة، يمكنك تحميله من هنا: ${document.content}`;
             }
-            contentData = bytes;
-          } catch (e) {
-            // If atob fails, treat as plain text
-            contentData = document.content;
+          } else {
+            let contentData: Uint8Array | string;
+            try {
+              const binaryString = atob(document.content);
+              const bytes = new Uint8Array(binaryString.length);
+              for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+              }
+              contentData = bytes;
+            } catch (e) {
+              contentData = document.content;
+            }
+            content = contentData;
           }
-          content = contentData;
         } else {
-          // Plain text content (no file uploaded)
           fileName = `${document.title}.txt`;
           content = document.content;
         }
 
         zip.file(fileName, content);
-      });
+      }
 
-      // Generate the zip file
       const zipBlob = await zip.generateAsync({ type: 'blob' });
       const zipUrl = URL.createObjectURL(zipBlob);
 
-      // Download the zip file
       const linkElement = window.document.createElement('a');
       linkElement.href = zipUrl;
       linkElement.download = `documents-export-${new Date().toISOString().split('T')[0]}.zip`;
@@ -190,21 +197,30 @@ export default function HomePage() {
       linkElement.click();
       window.document.body.removeChild(linkElement);
 
-      // Clean up the URL object
       URL.revokeObjectURL(zipUrl);
     } else {
       // Individual files
-      docsToExport.forEach((document) => {
+      for (const document of docsToExport) {
         let fileName: string;
-        let contentBlob: Blob;
-        let mimeType = document.mimeType;
-
+        
         if (document.originalFileName) {
-          // Binary file - content is already base64 encoded
           fileName = document.originalFileName;
-          if (!mimeType) {
-            mimeType = getMimeTypeFromFilename(document.originalFileName);
+          if (document.content.startsWith('http')) {
+            // تحميل من رابط خارجي
+            const linkElement = window.document.createElement('a');
+            linkElement.href = document.content;
+            linkElement.target = "_blank";
+            linkElement.download = fileName; // قد لا يعمل دائمًا لروابط خارجية بسبب CORS
+            window.document.body.appendChild(linkElement);
+            linkElement.click();
+            window.document.body.removeChild(linkElement);
+            continue;
           }
+          
+          let contentBlob: Blob;
+          let mimeType = document.mimeType;
+          if (!mimeType) mimeType = getMimeTypeFromFilename(document.originalFileName);
+          
           try {
             const binaryString = atob(document.content);
             const bytes = new Uint8Array(binaryString.length);
@@ -213,24 +229,31 @@ export default function HomePage() {
             }
             contentBlob = new Blob([bytes], { type: mimeType });
           } catch (e) {
-            // If atob fails for binary, treat as plain text
             contentBlob = new Blob([document.content], { type: 'text/plain;charset=utf-8' });
           }
+          
+          const url = URL.createObjectURL(contentBlob);
+          const linkElement = window.document.createElement('a');
+          linkElement.href = url;
+          linkElement.download = fileName;
+          window.document.body.appendChild(linkElement);
+          linkElement.click();
+          window.document.body.removeChild(linkElement);
+          URL.revokeObjectURL(url);
+          
         } else {
-          // Plain text content (no file uploaded)
           fileName = `${document.title}.txt`;
-          contentBlob = new Blob([document.content], { type: 'text/plain;charset=utf-8' });
+          const contentBlob = new Blob([document.content], { type: 'text/plain;charset=utf-8' });
+          const url = URL.createObjectURL(contentBlob);
+          const linkElement = window.document.createElement('a');
+          linkElement.href = url;
+          linkElement.download = fileName;
+          window.document.body.appendChild(linkElement);
+          linkElement.click();
+          window.document.body.removeChild(linkElement);
+          URL.revokeObjectURL(url);
         }
-
-        const url = URL.createObjectURL(contentBlob);
-        const linkElement = window.document.createElement('a');
-        linkElement.href = url;
-        linkElement.download = fileName;
-        window.document.body.appendChild(linkElement);
-        linkElement.click();
-        window.document.body.removeChild(linkElement);
-        URL.revokeObjectURL(url);
-      });
+      }
     }
   };
 

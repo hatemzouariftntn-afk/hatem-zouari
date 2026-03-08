@@ -56,38 +56,48 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, doc }) => 
         )}
 
         {doc.mimeType && doc.originalFileName ? (
-          <div className="document-file-info">
-            <strong>معلومات الملف:</strong>
-            <div>
-              <p><strong>اسم الملف:</strong> {doc.originalFileName ?? ''}</p>
-              <p><strong>نوع الملف:</strong> {doc.mimeType ?? ''}</p>
-              <button
-                onClick={() => {
-                  const dataUri = `data:${doc.mimeType ?? ''};base64,${doc.content}`;
-                  const linkElement = document.createElement('a');
-                  linkElement.href = dataUri;
-                  linkElement.download = doc.originalFileName ?? '';
-                  document.body.appendChild(linkElement);
-                  linkElement.click();
-                  document.body.removeChild(linkElement);
-                }}
-                className="btn btn-primary"
-              >
-                تحميل الملف
-              </button>
-              {doc.mimeType.startsWith('image/') && (
-                <div>
-                  <strong>معاينة:</strong>
-                  <img
-                    src={`data:${doc.mimeType};base64,${doc.content}`}
-                    alt={doc.originalFileName}
-                    className="image-preview"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        ) : (
+           <div className="document-file-info">
+             <strong>معلومات الملف:</strong>
+             <div>
+               <p><strong>اسم الملف:</strong> {doc.originalFileName ?? ''}</p>
+               <p><strong>نوع الملف:</strong> {doc.mimeType ?? ''}</p>
+               
+               {/* تحقق ما إذا كان المحتوى عبارة عن رابط سحابي (Cloudinary) أو Base64 قديم */}
+               {doc.content.startsWith('http') ? (
+                 <a href={doc.content} target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ display: 'inline-block', marginBottom: '15px' }}>
+                   عرض / تحميل الملف من السحابة
+                 </a>
+               ) : (
+                 <button
+                   onClick={() => {
+                     const dataUri = `data:${doc.mimeType ?? ''};base64,${doc.content}`;
+                     const linkElement = document.createElement('a');
+                     linkElement.href = dataUri;
+                     linkElement.download = doc.originalFileName ?? '';
+                     document.body.appendChild(linkElement);
+                     linkElement.click();
+                     document.body.removeChild(linkElement);
+                   }}
+                   className="btn btn-primary"
+                   style={{ marginBottom: '15px' }}
+                 >
+                   تحميل الملف المحلي
+                 </button>
+               )}
+
+               {doc.mimeType.startsWith('image/') && (
+                 <div>
+                   <strong>معاينة:</strong>
+                   <img
+                     src={doc.content.startsWith('http') ? doc.content : `data:${doc.mimeType};base64,${doc.content}`}
+                     alt={doc.originalFileName}
+                     className="image-preview"
+                   />
+                 </div>
+               )}
+             </div>
+           </div>
+         ) : (
           <div className="document-content">
             <strong>المحتوى:</strong>
             <div>
