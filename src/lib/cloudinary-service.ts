@@ -20,15 +20,21 @@ export async function uploadToCloudinary(base64Data: string, mimeType: string, f
       resourceType = 'raw';
     }
 
+    // استخراج امتداد الملف
+    const fileExtension = filename.split('.').pop()?.toLowerCase();
+
     // تنظيف اسم الملف من أي رموز غير مدعومة
     const safeFilename = filename.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9_\u0600-\u06FF]/g, '_');
     
+    // تكوين المعرف السحابي مع إضافة الامتداد الأصلي (مهم جداً للتعرف على نوع الملفات بصيغة RAW مثل PDF)
+    const publicId = fileExtension ? `${Date.now()}_${safeFilename}.${fileExtension}` : `${Date.now()}_${safeFilename}`;
+
     // رفع الملف بصيغة كود Promise
     const result: UploadApiResponse = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload(dataURI, {
         resource_type: resourceType,
         folder: 'document-archiver',
-        public_id: `${Date.now()}_${safeFilename}`,
+        public_id: publicId,
       }, (error, result) => {
         if (error) reject(error);
         else resolve(result as UploadApiResponse);
