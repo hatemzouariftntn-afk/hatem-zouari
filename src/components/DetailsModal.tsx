@@ -1,7 +1,8 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Document } from '@/types';
+import { createAIResponseAction } from '@/app/ai/actions';
 
 interface DetailsModalProps {
   isOpen: boolean;
@@ -10,7 +11,39 @@ interface DetailsModalProps {
 }
 
 const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, doc }) => {
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiResponse, setAiResponse] = useState('');
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [aiError, setAiError] = useState('');
+  
   if (!isOpen || !doc) return null;
+
+  const handleGenerateAIResponse = async () => {
+    if (!aiPrompt.trim()) return;
+    
+    setIsGeneratingAI(true);
+    setAiError('');
+    setAiResponse('');
+    
+    try {
+      const result = await createAIResponseAction(
+        doc.content, // Pass the document content to Gemini
+        aiPrompt,
+        doc.title,
+        doc.category
+      );
+      
+      if (result.success && result.text) {
+        setAiResponse(result.text);
+      } else {
+        setAiError(result.error || 'فشل في توليد الرد.');
+      }
+    } catch (err: any) {
+      setAiError('حدث خطأ في الاتصال بالمساعد الذكي.');
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleDateString('ar', {
@@ -125,9 +158,67 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, doc }) => 
         )}
       </div>
 
+      {/* منطقة المساعد الذكي AI Assistant */}
+      <div className="ai-assistant-section" style={{ marginTop: '20px', padding: '15px', borderTop: '2px dashed #e2e8f0', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
+        <h3 style={{ marginTop: 0, color: '#2563eb', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          ✨ المساعد الذكي (صياغة الردود)
+        </h3>
+        
+        <div style={{ marginBottom: '10px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>توجيهات الرد / المعطيات المطلوبة:</label>
+          <textarea 
+            value={aiPrompt}
+            onChange={(e) => setAiPrompt(e.target.value)}
+            placeholder="مثال: أكتب ردا رسميا أؤكد فيه أن عدد النوادي هو 45 نادياً بمجموع 2000 سباح للموسم 2025-2026..."
+            className="form-control"
+            style={{ width: '100%', minHeight: '80px', resize: 'vertical' }}
+            disabled={isGeneratingAI}
+          />
+        </div>
+
+        <button 
+          onClick={handleGenerateAIResponse} 
+          className="btn btn-primary"
+          style={{ width: '100%', background: 'linear-gradient(45deg, #2563eb, #8b5cf6)', border: 'none' }}
+          disabled={isGeneratingAI || !aiPrompt.trim()}
+        >
+          {isGeneratingAI ? '⏳ جاري صياغة الرد بالذكاء الاصطناعي...' : '🚀 توليد الرد الآن'}
+        </button>
+
+        {aiError && (
+          <div style={{ marginTop: '10px', color: '#ef4444', fontSize: '14px', padding: '8px', backgroundColor: '#fee2e2', borderRadius: '4px' }}>
+            {aiError}
+          </div>
+        )}
+
+        {aiResponse && (
+          <div style={{ marginTop: '15px', padding: '15px', backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', position: 'relative' }}>
+            <h4 style={{ marginTop: 0, marginBottom: '10px', color: '#1e293b' }}>📝 الرد المقترح:</h4>
+            <div style={{ whiteSpace: 'pre-wrap', fontSize: '14px', lineHeight: '1.6', color: '#334155' }}>
+              {aiResponse}
+            </div>
+            <button 
+              onClick={() => {
+                navigator.clipboard.writeText(aiResponse);
+                alert('تم نسخ الرد إلى الحافظة بنجاح! 📋');
+              }}
+              className="btn btn-secondary"
+              style={{ position: 'absolute', top: '10px', left: '10px', padding: '4px 8px', fontSize: '12px' }}
+            >
+              📋 نسخ
+            </button>
+          </div>
+        )}
+      </div>
+
       <div className="modal-footer">
         <button
-          onClick={onClose}
+          onClick={() => {
+            setAiResponse('');
+            setAiPrompt('');
+            setAiError('');
+            onClose();
+          }}
           className="btn btn-secondary"
         >
           إغلاق
