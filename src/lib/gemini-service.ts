@@ -15,8 +15,8 @@ export async function generateAIResponse(
       throw new Error('مفتاح API الخاص بـ Google Gemini مفقود. يرجى إضافته في إعدادات البيئة.');
     }
 
-    // Use Gemini 1.5 Flash
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    // Use Gemini Pro
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
     // Constructing a detailed prompt that forces the AI to act as an assistant
     const prompt = `
