@@ -26,7 +26,3 @@ export async function createAIResponseAction(
     return { success: false, error: 'فشل في توليد الرد، يرجى المحاولة لاحقاً.' };
   }
 }
-
-export async function getGeminiApiKeyAction() {
-  return process.env.GOOGLE_GEMINI_API_KEY || '';
-}
