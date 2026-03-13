@@ -38,7 +38,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, doc }) => 
       // 2. Initialize Gemini on the CLIENT SIDE to use local Tunisian IP instead of Render's Germany IP
       const genAI = new GoogleGenerativeAI(apiKey);
       
-      // Determine if we have a document to process (vision model) or just text (pro model)
+      // Determine if we have a document to process
       const hasImage = doc.content && (
         doc.content.startsWith('http') || 
         doc.content.startsWith('data:image') || 
@@ -46,8 +46,9 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, doc }) => 
         doc.content.includes('iVBORw0K')
       );
       
-      // Use the globally available 1.0 models instead of 1.5 which may be regionally restricted for this key
-      const modelName = hasImage ? 'gemini-pro-vision' : 'gemini-pro';
+      // In the latest Google AI SDK, gemini-pro-vision is completely deprecated and removed.
+      // Every request (text or image) MUST go through gemini-1.5-flash or gemini-1.5-flash-latest
+      const modelName = 'gemini-1.5-flash-latest';
       const model = genAI.getGenerativeModel({ model: modelName });
 
       const promptText = `
