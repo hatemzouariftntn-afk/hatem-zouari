@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { Document } from '@/types';
-import { createAIResponseAction } from '@/app/ai/actions';
+import { getGeminiApiKeyAction } from '@/app/ai/actions';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 interface DetailsModalProps {
   isOpen: boolean;
@@ -26,20 +27,92 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, doc }) => 
     setAiResponse('');
     
     try {
-      const result = await createAIResponseAction(
-        doc.content, // Pass the document content to Gemini
-        aiPrompt,
-        doc.title,
-        doc.category
-      );
-      
-      if (result.success && result.text) {
-        setAiResponse(result.text);
-      } else {
-        setAiError(result.error || 'فشل في توليد الرد.');
+      // 1. Fetch API key securely from Server (bypassing Render EU server restrictions)
+      const apiKey = await getGeminiApiKeyAction();
+      if (!apiKey) {
+        setAiError('مفتاح API مفقود.');
+        setIsGeneratingAI(false);
+        return;
       }
+
+      // 2. Initialize Gemini on the CLIENT SIDE to use local Tunisian IP instead of Render's Germany IP
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+      const promptText = `
+أنت الآن مساعد إداري ذكي متخصص في صياغة الردود الرسمية والمراسلات الإدارية في الجامعة التونسية للسباحة.
+
+المعطيات المتوفرة للرد:
+- عنوان الوثيقة/المراسلة الواردة: "${doc.title}"
+- الفئة المستند: "${doc.category}"
+
+طلب وتوجيهات المستخدم الدقيقة للرد:
+"${aiPrompt}"
+
+المطلوب:
+1. اقرأ الوثيقة المرفقة (إن وُجدت) وحللها بعناية لتدعيم الرد.
+2. قم بصياغة رد رسمي واحترافي باللغة العربية بناءً على توجيهات المستخدم.
+3. استخدم لغة إدارية تونسية سليمة ولبقة.
+4. اكتب نص المراسلة أو الرد مباشرة بدون مقدمات دردشة (لا تقل "بالتأكيد" أو "إليك الرد")، ليكون جاهزاً للنسخ والطباعة فوراً.
+`;
+
+      const parts: any[] = [{ text: promptText }];
+
+      // Fetch and attach the document inline
+      if (doc.content) {
+        try {
+          if (doc.content.startsWith('http')) {
+            const response = await fetch(doc.content);
+            const blob = await response.blob();
+            const reader = new FileReader();
+            
+            const base64Data = await new Promise<string>((resolve) => {
+              reader.onloadend = () => {
+                const result = reader.result as string;
+                resolve(result.split(',')[1]); // remove data:image/...;base64,
+              };
+              reader.readAsDataURL(blob);
+            });
+            
+            let mimeType = blob.type || 'application/pdf';
+            if (!blob.type) {
+              if (doc.content.toLowerCase().endsWith('.png')) mimeType = 'image/png';
+              else if (doc.content.toLowerCase().match(/\.(jpg|jpeg)$/)) mimeType = 'image/jpeg';
+            }
+            
+            parts.push({
+              inlineData: {
+                data: base64Data,
+                mimeType: mimeType
+              }
+            });
+          } else {
+            // Direct base64 string
+            const base64Data = doc.content.includes(',') ? Object.values(doc.content.split(','))[1] : doc.content;
+            let mimeType = 'application/pdf'; // Default fallback
+            if (base64Data.startsWith('/9j/')) mimeType = 'image/jpeg';
+            else if (base64Data.startsWith('iVBORw0K')) mimeType = 'image/png';
+            
+            parts.push({
+              inlineData: {
+                data: base64Data,
+                mimeType: mimeType
+              }
+            });
+          }
+        } catch (e) {
+          console.warn("Could not fetch document for AI context. Proceeding with text only. ", e);
+        }
+      }
+
+      // Send Request directly to Google AI from Browser!
+      const result = await model.generateContent(parts);
+      const textResponse = result.response.text();
+      setAiResponse(textResponse);
+      
     } catch (err: any) {
-      setAiError('حدث خطأ في الاتصال بالمساعد الذكي.');
+      console.error(err);
+      setAiError(err.message || 'حدث خطأ في الاتصال بالمساعد الذكي.');
     } finally {
       setIsGeneratingAI(false);
     }
