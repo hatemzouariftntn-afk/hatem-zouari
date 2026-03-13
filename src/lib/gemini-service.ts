@@ -14,8 +14,8 @@ export async function generateAIResponse(
       throw new Error('مفتاح API الخاص بـ Google Gemini مفقود. يرجى إضافته في إعدادات البيئة.');
     }
 
-    // Use Gemini 1.5 Flash (Supports processing Images and PDFs natively)
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    // Use Gemini Pro (Universal stable version for immediate compatibility)
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
     const promptText = `
 أنت الآن مساعد إداري ذكي متخصص في صياغة الردود الرسمية والمراسلات الإدارية في الجامعة التونسية للسباحة.
