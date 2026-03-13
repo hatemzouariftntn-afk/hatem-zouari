@@ -37,7 +37,18 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, doc }) => 
 
       // 2. Initialize Gemini on the CLIENT SIDE to use local Tunisian IP instead of Render's Germany IP
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      
+      // Determine if we have a document to process (vision model) or just text (pro model)
+      const hasImage = doc.content && (
+        doc.content.startsWith('http') || 
+        doc.content.startsWith('data:image') || 
+        doc.content.includes('/9j/') || 
+        doc.content.includes('iVBORw0K')
+      );
+      
+      // Use the globally available 1.0 models instead of 1.5 which may be regionally restricted for this key
+      const modelName = hasImage ? 'gemini-pro-vision' : 'gemini-pro';
+      const model = genAI.getGenerativeModel({ model: modelName });
 
       const promptText = `
 أنت الآن مساعد إداري ذكي متخصص في صياغة الردود الرسمية والمراسلات الإدارية في الجامعة التونسية للسباحة.
@@ -56,7 +67,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, doc }) => 
 4. اكتب نص المراسلة أو الرد مباشرة بدون مقدمات دردشة (لا تقل "بالتأكيد" أو "إليك الرد")، ليكون جاهزاً للنسخ والطباعة فوراً.
 `;
 
-      const parts: any[] = [{ text: promptText }];
+      const parts: any[] = [promptText];
 
       // Fetch and attach the document inline
       if (doc.content) {
