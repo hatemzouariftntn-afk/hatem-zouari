@@ -114,9 +114,14 @@ export class MongoDBDatabase {
       status: values.status !== undefined ? values.status : undefined,
     }
 
+    // ✅ مهم جداً: نحذف الحقول التي قيمتها undefined لمنع MongoDB من مسح البيانات الموجودة
+    const cleanUpdateData = Object.fromEntries(
+      Object.entries(updateData).filter(([_, v]) => v !== undefined)
+    ) as Partial<DocumentDocument>
+
     const result = await collection.findOneAndUpdate(
       { _id: new ObjectId(id), userId },
-      { $set: updateData },
+      { $set: cleanUpdateData },
       { returnDocument: 'after' }
     )
 
