@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Document } from '@/types';
-import { getDeadlineStatus, getDeadlineVisual, formatDeadline } from '@/lib/workflow-service';
+import { getDeadlineStatus, getDeadlineVisual, formatDeadline } from '@/lib/workflow-utils';
 import { updateDocumentWorkflow } from '@/app/documents/actions';
 import { listDocuments } from '@/app/documents/actions';
 
