@@ -14,6 +14,10 @@ export interface UiDocument {
   updatedAt: Date;
   mimeType: string | null;
   originalFileName: string | null;
+  // Workflow fields
+  deadline: number | null;
+  linkedDocumentIds: string[] | null;
+  status: 'pending' | 'in_progress' | 'done' | null;
 }
 
 /**
@@ -29,10 +33,13 @@ export function dbToUiDocument(dbDocument: DbDocument | null): UiDocument | null
     content: dbDocument.content,
     tags: dbDocument.tags,
     category: dbDocument.category,
-    createdAt: new Date(dbDocument.createdAt * 1000), // تحويل من ثواني إلى مللي ثواني
+    createdAt: new Date(dbDocument.createdAt * 1000),
     updatedAt: new Date(dbDocument.updatedAt * 1000),
     mimeType: dbDocument.mimeType,
     originalFileName: dbDocument.originalFileName,
+    deadline: dbDocument.deadline ?? null,
+    linkedDocumentIds: dbDocument.linkedDocumentIds ?? null,
+    status: dbDocument.status ?? null,
   };
 }
 
@@ -54,9 +61,12 @@ export function uiToDbDocument(uiDocument: UiDocument): DbDocument {
     content: uiDocument.content,
     tags: uiDocument.tags,
     category: uiDocument.category,
-    createdAt: Math.floor(uiDocument.createdAt.getTime() / 1000), // تحويل من مللي ثواني إلى ثواني
+    createdAt: Math.floor(uiDocument.createdAt.getTime() / 1000),
     updatedAt: Math.floor(uiDocument.updatedAt.getTime() / 1000),
     mimeType: uiDocument.mimeType,
     originalFileName: uiDocument.originalFileName,
+    deadline: uiDocument.deadline ?? null,
+    linkedDocumentIds: uiDocument.linkedDocumentIds ?? null,
+    status: uiDocument.status ?? null,
   };
 }
