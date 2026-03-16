@@ -37,18 +37,12 @@ export async function checkAndSendDeadlineReminders(): Promise<{ sent: number; f
       
       // تحويل الموعد إلى كائن Date سواء كان رقماً (ثواني) أو كائن تاريخ
       let docDeadline: Date;
-      let deadlineTs: number;
-
       if (typeof doc.deadline === 'number') {
         docDeadline = new Date(doc.deadline * 1000);
-        deadlineTs = doc.deadline;
       } else if (doc.deadline instanceof Date) {
         docDeadline = doc.deadline;
-        deadlineTs = Math.floor(doc.deadline.getTime() / 1000);
       } else {
-        // إذا كان نوعاً آخر (مثل Date تم تحويله لـ string)
         docDeadline = new Date(doc.deadline);
-        deadlineTs = Math.floor(docDeadline.getTime() / 1000);
       }
       
       // إذا كان الموعد فات أو اليوم أو خلال الـ 4 أيام القادمة
@@ -58,7 +52,7 @@ export async function checkAndSendDeadlineReminders(): Promise<{ sent: number; f
           await sendDeadlineReminderEmail(
             doc.title,
             doc.category,
-            deadlineTs,
+            docDeadline,
             doc.userId || 'admin'
           );
           sent++;
