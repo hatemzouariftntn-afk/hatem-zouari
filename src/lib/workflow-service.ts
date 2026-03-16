@@ -20,12 +20,16 @@ export async function checkAndSendDeadlineReminders(): Promise<{ sent: number; f
     const collection = await getCollection<DocumentDocument>('documents');
 
     const now = new Date();
-    const in3Days = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    // ضبط الوقت لبداية اليوم الحالي (00:00:00) لضمان شمول مواعيد اليوم بالكامل
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const in3Days = new Date(startOfToday.getTime() + 3 * 24 * 60 * 60 * 1000);
 
+    // البحث عن الوثائق التي موعدها فات (Overdue) أو اليوم (Today) أو خلال 3 أيام
+    // وحالتها ليست "مكتملة"
     const urgentDocs = await collection.find({
       deadline: {
-        $gte: now,
-        $lte: in3Days
+        $lte: in3Days,
+        $ne: null
       },
       status: { $ne: 'done' }
     }).toArray();
