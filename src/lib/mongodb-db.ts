@@ -25,7 +25,10 @@ export class MongoDBDatabase {
       createdAt: Math.floor(doc.createdAt.getTime() / 1000),
       updatedAt: Math.floor(doc.updatedAt.getTime() / 1000),
       mimeType: doc.mimeType || null,
-      originalFileName: doc.originalFileName || null
+      originalFileName: doc.originalFileName || null,
+      deadline: doc.deadline ? Math.floor(doc.deadline.getTime() / 1000) : null,
+      linkedDocumentIds: doc.linkedDocumentIds || null,
+      status: doc.status || null,
     }))
   }
 
@@ -45,7 +48,10 @@ export class MongoDBDatabase {
       createdAt: Math.floor(doc.createdAt.getTime() / 1000),
       updatedAt: Math.floor(doc.updatedAt.getTime() / 1000),
       mimeType: doc.mimeType || null,
-      originalFileName: doc.originalFileName || null
+      originalFileName: doc.originalFileName || null,
+      deadline: doc.deadline ? Math.floor(doc.deadline.getTime() / 1000) : null,
+      linkedDocumentIds: doc.linkedDocumentIds || null,
+      status: doc.status || null,
     }
   }
 
@@ -63,7 +69,10 @@ export class MongoDBDatabase {
       createdAt: now,
       updatedAt: now,
       mimeType: values.mimeType || null,
-      originalFileName: values.originalFileName || null
+      originalFileName: values.originalFileName || null,
+      deadline: values.deadline ? new Date(values.deadline * 1000) : null,
+      linkedDocumentIds: values.linkedDocumentIds || null,
+      status: values.status || null,
     }
 
     const result = await collection.insertOne(newDocument as DocumentDocument)
@@ -80,7 +89,10 @@ export class MongoDBDatabase {
       createdAt: Math.floor(insertedDoc.createdAt.getTime() / 1000),
       updatedAt: Math.floor(insertedDoc.updatedAt.getTime() / 1000),
       mimeType: insertedDoc.mimeType || null,
-      originalFileName: insertedDoc.originalFileName || null
+      originalFileName: insertedDoc.originalFileName || null,
+      deadline: insertedDoc.deadline ? Math.floor(insertedDoc.deadline.getTime() / 1000) : null,
+      linkedDocumentIds: insertedDoc.linkedDocumentIds || null,
+      status: insertedDoc.status || null,
     }
   }
 
@@ -96,7 +108,10 @@ export class MongoDBDatabase {
       category: values.category,
       mimeType: values.mimeType,
       originalFileName: values.originalFileName,
-      updatedAt: now
+      updatedAt: now,
+      deadline: values.deadline !== undefined ? (values.deadline ? new Date(values.deadline * 1000) : null) : undefined,
+      linkedDocumentIds: values.linkedDocumentIds !== undefined ? values.linkedDocumentIds : undefined,
+      status: values.status !== undefined ? values.status : undefined,
     }
 
     const result = await collection.findOneAndUpdate(
@@ -116,7 +131,10 @@ export class MongoDBDatabase {
       createdAt: Math.floor(result.value.createdAt.getTime() / 1000),
       updatedAt: Math.floor(result.value.updatedAt.getTime() / 1000),
       mimeType: result.value.mimeType || null,
-      originalFileName: result.value.originalFileName || null
+      originalFileName: result.value.originalFileName || null,
+      deadline: result.value.deadline ? Math.floor(result.value.deadline.getTime() / 1000) : null,
+      linkedDocumentIds: result.value.linkedDocumentIds || null,
+      status: result.value.status || null,
     }
   }
 
@@ -142,7 +160,10 @@ export class MongoDBDatabase {
       createdAt: Math.floor(doc.createdAt.getTime() / 1000),
       updatedAt: Math.floor(doc.updatedAt.getTime() / 1000),
       mimeType: doc.mimeType || null,
-      originalFileName: doc.originalFileName || null
+      originalFileName: doc.originalFileName || null,
+      deadline: doc.deadline ? Math.floor(doc.deadline.getTime() / 1000) : null,
+      linkedDocumentIds: doc.linkedDocumentIds || null,
+      status: doc.status || null,
     }))
   }
 

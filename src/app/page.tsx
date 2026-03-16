@@ -423,6 +423,8 @@ export default function HomePage() {
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
         doc={viewingDocument}
+        allDocuments={documents}
+        onUpdate={loadData}
       />
 
       <DownloadModal

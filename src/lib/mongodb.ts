@@ -47,6 +47,10 @@ export interface DocumentDocument extends MongoDocument {
   updatedAt: Date
   mimeType: string | null
   originalFileName: string | null
+  // Workflow Management
+  deadline: Date | null
+  linkedDocumentIds: string[] | null
+  status: 'pending' | 'in_progress' | 'done' | null
 }
 
 export interface CategoryDocument extends MongoDocument {

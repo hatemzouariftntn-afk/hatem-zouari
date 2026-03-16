@@ -3,16 +3,21 @@
 
 // تعريف نوع البيانات للوثائق
 export interface Document {
-  id: string; // Changed to string for MongoDB
+  id: string;
   title: string;
   content: string;
-  tags: string[] | null; // Changed to array for better handling
+  tags: string[] | null;
   category: string;
   createdAt: number;
   updatedAt: number;
   mimeType: string | null;
   originalFileName: string | null;
+  // Workflow Management Fields
+  deadline: number | null;          // Unix timestamp للموعد النهائي للرد
+  linkedDocumentIds: string[] | null; // معرّفات الوثائق المرتبطة (سلسلة المراسلات)
+  status: 'pending' | 'in_progress' | 'done' | null; // حالة متابعة الوثيقة
 }
+
 
 // تعريف نوع البيانات للوسوم
 export interface Tag {

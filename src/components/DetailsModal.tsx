@@ -3,14 +3,17 @@
 import React, { useState } from 'react';
 import { Document } from '@/types';
 import { createAIResponseAction } from '@/app/ai/actions';
+import { WorkflowPanel, DeadlineBadge } from './WorkflowPanel';
 
 interface DetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   doc: Document | null;
+  allDocuments?: Document[];
+  onUpdate?: () => void;
 }
 
-const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, doc }) => {
+const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, doc, allDocuments = [], onUpdate }) => {
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiResponse, setAiResponse] = useState('');
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -76,6 +79,9 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, doc }) => 
           <strong> تاريخ الإنشاء:</strong> {formatDate(doc.createdAt)} |
           <strong> آخر تحديث:</strong> {formatDate(doc.updatedAt)}
         </div>
+
+        {/* شارة الموعد النهائي والحالة */}
+        <DeadlineBadge deadline={doc.deadline} status={doc.status} />
 
         {doc.tags && (
           <div className="document-tags">
@@ -157,6 +163,14 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, doc }) => 
           </div>
         )}
       </div>
+
+      {/* لوحة سير العمل */}
+      <WorkflowPanel
+        document={doc}
+        allDocuments={allDocuments}
+        onUpdate={onUpdate}
+        lang="ar"
+      />
 
       {/* منطقة المساعد الذكي AI Assistant */}
       <div className="ai-assistant-section" style={{ marginTop: '20px', padding: '15px', borderTop: '2px dashed #e2e8f0', backgroundColor: '#f8fafc', borderRadius: '8px' }}>

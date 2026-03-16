@@ -32,16 +32,16 @@ export async function createDocument(formData: FormData) {
       : [];
 
     let finalContent = validatedData.content;
-    
+
     // رفع الملف إلى السحابة أو الاحتفاظ به كنص
     if (validatedData.mimeType && validatedData.originalFileName && process.env.CLOUDINARY_API_SECRET) {
       console.log('☁️ جاري رفع الملف إلى Cloudinary...');
       try {
         const { uploadToCloudinary } = await import('@/lib/cloudinary-service');
         const uploadRes = await uploadToCloudinary(validatedData.content, validatedData.mimeType, validatedData.originalFileName);
-        
+
         if (uploadRes.success && uploadRes.url) {
-          finalContent = uploadRes.url; // استبدال الـ base64 بالرابط السريع والخفيف
+          finalContent = uploadRes.url;
           console.log('✅ تم رفع الملف بنجاح:', finalContent);
         } else {
           console.warn('⚠️ فشل الرفع للسحابة، سيتم الحفظ داخلياً:', uploadRes.error);
@@ -51,6 +51,14 @@ export async function createDocument(formData: FormData) {
       }
     }
 
+    // Workflow fields from formData
+    const deadlineRaw = formData.get('deadline') as string | null;
+    const deadline = deadlineRaw ? Math.floor(new Date(deadlineRaw).getTime() / 1000) : null;
+    const linkedDocumentIds = formData.get('linkedDocumentIds')
+      ? (formData.get('linkedDocumentIds') as string).split(',').filter(Boolean)
+      : null;
+    const status = (formData.get('status') as 'pending' | 'in_progress' | 'done' | null) || null;
+
     const newDocument = await mongoDB.insertDocument({
       title: validatedData.title,
       content: finalContent,
@@ -58,15 +66,16 @@ export async function createDocument(formData: FormData) {
       category: validatedData.category || 'عام',
       mimeType: validatedData.mimeType || null,
       originalFileName: validatedData.originalFileName || null,
+      deadline,
+      linkedDocumentIds,
+      status,
     });
-
 
     revalidatePath('/');
 
     // 📩 إرسال إشعار بالبريد الإلكتروني
     try {
       const { sendNewDocumentNotification } = await import('@/lib/email-service');
-      // سننتظر الإرسال الآن لتجربة نجاح العملية
       await sendNewDocumentNotification(validatedData.title, validatedData.category || 'عام');
     } catch (emailError) {
       console.warn('⚠️ فشل في إرسال إشعار البريد (تحقق من الإعدادات):', emailError);
@@ -206,5 +215,26 @@ export async function bulkImportDocuments(documentsData: Array<{
   } catch (error) {
     console.error('خطأ في الاستيراد الجماعي:', error);
     return { success: false, error: 'فشل في الاستيراد الجماعي' };
+  }
+}
+
+/**
+ * تحديث حقول سير العمل للوثيقة (الموعد النهائي، الوثائق المرتبطة، الحالة)
+ */
+export async function updateDocumentWorkflow(
+  id: string,
+  workflow: {
+    deadline?: number | null;
+    linkedDocumentIds?: string[] | null;
+    status?: 'pending' | 'in_progress' | 'done' | null;
+  }
+) {
+  try {
+    const updatedDocument = await mongoDB.updateDocument(id, workflow);
+    revalidatePath('/');
+    return { success: true, document: updatedDocument };
+  } catch (error: any) {
+    console.error('خطأ في تحديث سير العمل:', error);
+    return { success: false, error: error.message || 'فشل في تحديث سير العمل' };
   }
 }
