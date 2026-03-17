@@ -24,14 +24,22 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         try {
+          console.log('🔐 Auth attempt for email:', credentials?.email)
           const { email, password } = credentialsSchema.parse(credentials)
 
           const client = await clientPromise
-          const db = client.db(process.env.MONGODB_DB || 'document-archiver')
+          if (!client) {
+            console.error('❌ MongoDB client not initialized in Auth')
+            return null
+          }
 
+          const db = client.db(process.env.MONGODB_DB || 'document-archiver')
+          console.log('📡 Checking user in database...')
+          
           const user = await db.collection('users').findOne({ email })
 
           if (!user) {
+            console.log('👤 User not found, checking if registration is allowed...')
             const newUser = {
               email,
               password: Buffer.from(password).toString('base64'),
@@ -53,7 +61,7 @@ export const authOptions: NextAuthOptions = {
 
           const storedPassword = Buffer.from(user.password, 'base64').toString()
           if (storedPassword === password) {
-            console.log('👤 Existing user found with ID:', user._id)
+            console.log('✅ User authenticated successfully:', user.email)
 
             return {
               id: user._id.toString(),
@@ -63,9 +71,10 @@ export const authOptions: NextAuthOptions = {
             } as any
           }
 
+          console.warn('⚠️ Invalid password for user:', email)
           return null
-        } catch (error) {
-          console.error('Auth error:', error)
+        } catch (error: any) {
+          console.error('❌ Auth error detail:', error.message)
           return null
         }
       },

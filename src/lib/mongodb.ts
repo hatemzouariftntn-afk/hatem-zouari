@@ -9,16 +9,30 @@ let clientPromise: Promise<MongoClient> | null = null
 export async function getDatabase(): Promise<Db> {
   const uri = process.env.MONGODB_URI
   if (!uri) {
+    console.error('❌ MONGODB_URI is not defined in environment variables')
     throw new Error('MONGODB_URI is not defined')
   }
 
-  if (!clientPromise) {
-    client = new MongoClient(uri, options)
-    clientPromise = client.connect()
-  }
+  try {
+    if (!clientPromise) {
+      console.log('📡 Attempting to connect to MongoDB...')
+      client = new MongoClient(uri, {
+        connectTimeoutMS: 10000,
+        serverSelectionTimeoutMS: 10000,
+      })
+      clientPromise = client.connect()
+    }
 
-  const connectedClient = await clientPromise
-  return connectedClient.db(process.env.MONGODB_DB || 'document-archiver')
+    const connectedClient = await clientPromise
+    console.log('✅ MongoDB connected successfully')
+    return connectedClient.db(process.env.MONGODB_DB || 'document-archiver')
+  } catch (error: any) {
+    console.error('❌ MongoDB Connection Error:', error.message)
+    // Reset promise to allow retry on next request
+    clientPromise = null
+    client = null
+    throw error
+  }
 }
 
 export async function getCollection<T extends MongoDocument>(name: string): Promise<Collection<T>> {
