@@ -1,0 +1,17 @@
+name: Daily Deadline Reminders
+
+on:
+  schedule:
+    # سيتم تشغيل المهمة كل يوم الساعة 08:00 صباحاً بتوقيت UTC
+    # يعادل تقريباً الساعة 09:00 صباحاً بتوقيت تونس
+    - cron: '0 8 * * *'
+  workflow_dispatch: # يسمح بتشغيل المهمة يدوياً من GitHub للتجربة
+
+jobs:
+  send-reminders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Reminder API
+        run: |
+          curl -X GET "https://hatem-zouari.onrender.com/api/cron/reminders" \
+          -H "Authorization: Bearer HatemDocumentftn2026"

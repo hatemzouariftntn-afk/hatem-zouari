@@ -6,6 +6,14 @@ export const dynamic = 'force-dynamic'; // إجبار المتصفح على جل
 
 export async function GET(request: Request) {
   try {
+    // التحقق من المفتاح السري لحماية النقطة من الاستدعاء العشوائي
+    const authHeader = request.headers.get('Authorization');
+    const cronSecret = process.env.CRON_SECRET || 'default-cron-secret';
+
+    if (authHeader !== `Bearer ${cronSecret}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const result = await checkAndSendDeadlineReminders();
     return NextResponse.json({
       success: true,
