@@ -26,11 +26,7 @@ export async function checkAndSendDeadlineReminders(): Promise<{ sent: number; f
 
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const searchWindow = new Date(startOfToday.getTime() + 90 * 24 * 60 * 60 * 1000); // 90 يوماً للتأكد
-
-    if (docs.length === 0) {
-      console.log('ℹ️ لم يتم العثور على أي وثائق معلقة لها مواعيد نهائية.');
-    }
+    const searchWindow = new Date(startOfToday.getTime() + 4 * 24 * 60 * 60 * 1000); // التنبيه قبل الموعد بـ 4 أيام
 
     for (const doc of docs) {
       if (!doc.deadline) continue;
@@ -38,10 +34,6 @@ export async function checkAndSendDeadlineReminders(): Promise<{ sent: number; f
       let docDeadline = new Date(typeof doc.deadline === 'number' ? doc.deadline * 1000 : doc.deadline);
       const isUrgent = docDeadline <= searchWindow;
       
-      const statusMsg = `📄 الوثيقة: "${doc.title}" | الموعد: ${docDeadline.toLocaleDateString('ar-TN')} | عاجل؟: ${isUrgent ? 'نعم' : 'لا'}`;
-      debugInfo.push(statusMsg);
-      console.log(statusMsg);
-
       if (isUrgent) {
         try {
           await sendDeadlineReminderEmail(
@@ -51,17 +43,14 @@ export async function checkAndSendDeadlineReminders(): Promise<{ sent: number; f
             doc.userId || 'admin'
           );
           sent++;
-          console.log(`✅ نداء إرسال الإيميل للوثيقة: ${doc.title}`);
         } catch (e: any) {
           failed++;
-          console.error(`❌ فشل استدعاء الإرسال للوثيقة "${doc.title}":`, e.message);
+          console.error(`❌ خطأ في إرسال تنبيه "${doc.title}":`, e.message);
         }
       }
     }
   } catch (e: any) {
-    const errMsg = `🚨 خطأ عام في قاعدة البيانات: ${e.message}`;
-    debugInfo.push(errMsg);
-    console.error(errMsg);
+    console.error(`🚨 خطأ في قاعدة البيانات أثناء تشغيل المواعيد:`, e.message);
   }
 
   return { sent, failed, debugInfo };
