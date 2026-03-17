@@ -1,20 +1,31 @@
 import { Resend } from 'resend';
 
 /**
- * وظيفة إرسال بريد إلكتروني عند إضافة مستند جديد باستخدام Resend
+ * دالة مساعدة للحصول على قائمة الإيميلات من متغيرات البيئة
+ */
+function getRecipientEmails(): string[] {
+    const RECEIVER_EMAIL = process.env.RECEIVER_EMAIL || process.env.NOTIFICATION_EMAIL;
+    if (!RECEIVER_EMAIL) return [];
+    // تقسيم النص إذا كان يحتوي على فاصلة وإزالة الفراغات الزائدة
+    return RECEIVER_EMAIL.split(',').map(e => e.trim()).filter(e => e.length > 0);
+}
+
+/**
+ * وظيفة إرسال بريد إلكتروني عند إضافة مستند جديد
  */
 export async function sendNewDocumentNotification(docTitle: string, category: string) {
     const RESEND_API_KEY = process.env.RESEND_API_KEY;
-    const RECEIVER_EMAIL = process.env.RECEIVER_EMAIL || process.env.NOTIFICATION_EMAIL;
+    const emails = getRecipientEmails();
 
-    if (!RESEND_API_KEY || !RECEIVER_EMAIL) return;
+    if (!RESEND_API_KEY || emails.length === 0) return;
 
     const resend = new Resend(RESEND_API_KEY);
+    console.log(`✉️ جاري إرسال تنبيه مستند جديد إلى: ${emails.join(', ')}`);
 
     try {
         await resend.emails.send({
             from: 'Document Archiver <onboarding@resend.dev>',
-            to: [RECEIVER_EMAIL as string],
+            to: emails,
             subject: `📄 مستند جديد: ${docTitle}`,
             html: `
         <div style="direction: rtl; font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
@@ -44,12 +55,12 @@ export async function sendDeadlineReminderEmail(
     userId: string
 ) {
     const RESEND_API_KEY = process.env.RESEND_API_KEY;
-    const RECEIVER_EMAIL = process.env.RECEIVER_EMAIL || process.env.NOTIFICATION_EMAIL;
+    const emails = getRecipientEmails();
 
-    if (!RESEND_API_KEY || !RECEIVER_EMAIL) return;
+    if (!RESEND_API_KEY || emails.length === 0) return;
 
     const resend = new Resend(RESEND_API_KEY);
-
+    
     const deadlineStr = deadline.toLocaleDateString('ar-TN-u-ca-gregory', {
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
@@ -59,10 +70,12 @@ export async function sendDeadlineReminderEmail(
     const urgencyColor = diffDays <= 0 ? '#dc2626' : diffDays <= 1 ? '#ea580c' : '#ca8a04';
     const urgencyText = diffDays <= 0 ? '🔴 فات الموعد!' : diffDays === 1 ? '🟠 اليوم الأخير!' : `🟡 متبقي ${diffDays} أيام`;
 
+    console.log(`✉️ جاري إرسال تنبيه موعد نهائي إلى: ${emails.join(', ')}`);
+
     try {
         await resend.emails.send({
             from: 'Document Archiver <onboarding@resend.dev>',
-            to: [RECEIVER_EMAIL as string],
+            to: emails,
             subject: `⏰ تنبيه موعد نهائي: ${docTitle}`,
             html: `
         <div style="direction: rtl; font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto;">
