@@ -6,7 +6,6 @@ import { Resend } from 'resend';
 function getRecipientEmails(): string[] {
     const RECEIVER_EMAIL = process.env.RECEIVER_EMAIL || process.env.NOTIFICATION_EMAIL;
     if (!RECEIVER_EMAIL) return [];
-    // تقسيم النص إذا كان يحتوي على فاصلة وإزالة الفراغات الزائدة
     return RECEIVER_EMAIL.split(',').map(e => e.trim()).filter(e => e.length > 0);
 }
 
@@ -23,7 +22,7 @@ export async function sendNewDocumentNotification(docTitle: string, category: st
     console.log(`✉️ جاري إرسال تنبيه مستند جديد إلى: ${emails.join(', ')}`);
 
     try {
-        await resend.emails.send({
+        const data = await resend.emails.send({
             from: 'Document Archiver <onboarding@resend.dev>',
             to: emails,
             subject: `📄 مستند جديد: ${docTitle}`,
@@ -40,8 +39,14 @@ export async function sendNewDocumentNotification(docTitle: string, category: st
         </div>
       `,
         });
+
+        if (data.error) {
+            console.error('❌ خطأ فني من Resend (إشعار جديد):', data.error);
+        } else {
+            console.log('✅ تم إرسال إشعار المستند الجديد بنجاح:', data.data?.id);
+        }
     } catch (error) {
-        console.error('❌ خطأ في إرسال البريد عبر Resend:', error);
+        console.error('❌ خطأ غير متوقع في إرسال إشعار المستند الجديد:', error);
     }
 }
 
@@ -73,7 +78,7 @@ export async function sendDeadlineReminderEmail(
     console.log(`✉️ جاري إرسال تنبيه موعد نهائي إلى: ${emails.join(', ')}`);
 
     try {
-        await resend.emails.send({
+        const data = await resend.emails.send({
             from: 'Document Archiver <onboarding@resend.dev>',
             to: emails,
             subject: `⏰ تنبيه موعد نهائي: ${docTitle}`,
@@ -104,8 +109,13 @@ export async function sendDeadlineReminderEmail(
         </div>
       `,
         });
-        console.log('✅ تم إرسال تنبيه الموعد النهائي بنجاح');
+
+        if (data.error) {
+            console.error('❌ خطأ فني من Resend (تنبيه موعد):', data.error);
+        } else {
+            console.log('✅ تم إرسال تنبيه الموعد النهائي بنجاح:', data.data?.id);
+        }
     } catch (error) {
-        console.error('❌ خطأ في إرسال تنبيه الموعد النهائي:', error);
+        console.error('❌ خطأ غير متوقع في إرسال تنبيه الموعد النهائي:', error);
     }
 }
