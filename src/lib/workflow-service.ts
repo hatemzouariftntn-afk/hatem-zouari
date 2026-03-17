@@ -14,19 +14,19 @@ export async function checkAndSendDeadlineReminders(): Promise<{ sent: number; f
   try {
     const collection = await getCollection<DocumentDocument>('documents');
     
-    // جلب كل الوثائق التي لديها موعد نهائي وحالتها ليست 'done'
+    // جلب كل الوثائق التي لديها أي قيمة في الموعد النهائي وحالتها ليست 'تم الإنجاز'
     const docs = await collection.find({
-      deadline: { $ne: null },
+      deadline: { $exists: true, $ne: "" } as any,
       status: { $ne: 'done' }
     }).toArray();
 
-    const msg = `📊 إجمالي الوثائق المعثور عليها: ${docs.length}`;
+    const msg = `📊 إجمالي الوثائق التي لها مواعيد: ${docs.length}`;
     debugInfo.push(msg);
     console.log(msg);
 
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const searchWindow = new Date(startOfToday.getTime() + 30 * 24 * 60 * 60 * 1000); // إرسال تنبيه لأي موعد خلال 30 يوماً
+    const searchWindow = new Date(startOfToday.getTime() + 90 * 24 * 60 * 60 * 1000); // 90 يوماً للتأكد
 
     if (docs.length === 0) {
       console.log('ℹ️ لم يتم العثور على أي وثائق معلقة لها مواعيد نهائية.');
