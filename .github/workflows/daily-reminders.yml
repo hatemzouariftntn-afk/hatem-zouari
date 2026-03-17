@@ -13,5 +13,5 @@ jobs:
     steps:
       - name: Call Reminder API
         run: |
-          curl -v -f -X GET "https://hatem-zouari.onrender.com/api/cron/reminders" \
+          curl -v -f -L "https://hatem-zouari.onrender.com/api/cron/reminders/" \
           -H "Authorization: Bearer HatemDocumentftn2026"
