@@ -1,9 +1,18 @@
 import { Resend } from 'resend';
 
 function getRecipientEmails(): string[] {
-    const RECEIVER_EMAIL = process.env.RECEIVER_EMAIL || process.env.NOTIFICATION_EMAIL;
-    if (!RECEIVER_EMAIL) return [];
-    return RECEIVER_EMAIL.split(',').map(e => e.trim()).filter(e => e.length > 0);
+    const emails = new Set<string>();
+    
+    [process.env.RECEIVER_EMAIL, process.env.NOTIFICATION_EMAIL].forEach(val => {
+        if (val) {
+            val.split(',').forEach(e => {
+                const trimmed = e.trim();
+                if (trimmed) emails.add(trimmed);
+            });
+        }
+    });
+    
+    return Array.from(emails);
 }
 
 export async function sendNewDocumentNotification(docTitle: string, category: string) {
@@ -12,6 +21,7 @@ export async function sendNewDocumentNotification(docTitle: string, category: st
     if (!RESEND_API_KEY || emails.length === 0) return;
 
     const resend = new Resend(RESEND_API_KEY);
+    console.log(`📩 المحاولة لإرسال إشعار مستند جديد لـ: ${emails.join(', ')}`);
 
     for (const email of emails) {
         try {
@@ -53,6 +63,8 @@ export async function sendDeadlineReminderEmail(docTitle: string, category: stri
     const diffDays = Math.ceil((deadline.getTime() - now) / (1000 * 60 * 60 * 24));
     const urgencyColor = diffDays <= 0 ? '#dc2626' : diffDays <= 1 ? '#ea580c' : '#ca8a04';
     const urgencyText = diffDays <= 0 ? '🔴 فات الموعد!' : diffDays === 1 ? '🟠 اليوم الأخير!' : `🟡 متبقي ${diffDays} أيام`;
+
+    console.log(`⏰ المحاولة لإرسال تنبيه موعد نهائي لـ: ${emails.join(', ')}`);
 
     for (const email of emails) {
         try {
