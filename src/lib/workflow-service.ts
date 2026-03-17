@@ -26,13 +26,17 @@ export async function checkAndSendDeadlineReminders(): Promise<{ sent: number; f
 
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const in3Days = new Date(startOfToday.getTime() + 5 * 24 * 60 * 60 * 1000); // زيادة أيام الفحص للاختبار
+    const searchWindow = new Date(startOfToday.getTime() + 30 * 24 * 60 * 60 * 1000); // إرسال تنبيه لأي موعد خلال 30 يوماً
+
+    if (docs.length === 0) {
+      console.log('ℹ️ لم يتم العثور على أي وثائق معلقة لها مواعيد نهائية.');
+    }
 
     for (const doc of docs) {
       if (!doc.deadline) continue;
 
       let docDeadline = new Date(typeof doc.deadline === 'number' ? doc.deadline * 1000 : doc.deadline);
-      const isUrgent = docDeadline <= in3Days;
+      const isUrgent = docDeadline <= searchWindow;
       
       const statusMsg = `📄 الوثيقة: "${doc.title}" | الموعد: ${docDeadline.toLocaleDateString('ar-TN')} | عاجل؟: ${isUrgent ? 'نعم' : 'لا'}`;
       debugInfo.push(statusMsg);
