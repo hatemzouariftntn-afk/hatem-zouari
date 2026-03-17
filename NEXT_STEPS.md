@@ -36,7 +36,7 @@
    NODE_ENV=production
    NEXTAUTH_URL=https://document-archiver.onrender.com
    NEXTAUTH_SECRET=your-secret-here
-   MONGODB_URI=mongodb+srv://document-archiver-user:PASSWORD@cluster.mongodb.net/document-archiver?retryWrites=true&w=majority
+   MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/<dbname>
    ```
 
 ### الخطوة 4: الإعدادات النهائية (5 دقائق)

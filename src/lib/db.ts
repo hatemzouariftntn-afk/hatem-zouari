@@ -3,7 +3,7 @@ import { performanceDB } from './performance-db'
 
 // تحقق من وجود MongoDB URI صحيح
 const useMongoDB = process.env.MONGODB_URI && 
-  process.env.MONGODB_URI !== 'mongodb+srv://username:password@cluster.mongodb.net/document-archiver?retryWrites=true&w=majority' &&
+  !process.env.MONGODB_URI.includes('example.com') &&
   !process.env.MONGODB_URI.includes('YOUR_PASSWORD');
 
 if (useMongoDB) {

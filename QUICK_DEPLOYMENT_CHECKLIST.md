@@ -39,7 +39,7 @@
 NODE_ENV=production
 NEXTAUTH_URL=https://your-app.onrender.com
 NEXTAUTH_SECRET=generate-random-secret
-MONGODB_URI=mongodb+srv://user:password@cluster.mongodb.net/dbname
+MONGODB_URI=your_mongodb_connection_string
 ```
 
 ### Render IP Addresses لم MongoDB:
