@@ -20,23 +20,23 @@ export async function checkAndSendDeadlineReminders(): Promise<{ sent: number; f
       status: { $ne: 'done' }
     }).toArray();
 
-    debugInfo.push(`📊 إجمالي الوثائق المعثور عليها: ${docs.length}`);
+    const msg = `📊 إجمالي الوثائق المعثور عليها: ${docs.length}`;
+    debugInfo.push(msg);
+    console.log(msg);
 
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const in3Days = new Date(startOfToday.getTime() + 4 * 24 * 60 * 60 * 1000);
+    const in3Days = new Date(startOfToday.getTime() + 5 * 24 * 60 * 60 * 1000); // زيادة أيام الفحص للاختبار
 
     for (const doc of docs) {
-      if (!doc.deadline) {
-        debugInfo.push(`⏭️ تخطي الوثيقة "${doc.title}": لا يوجد موعد.`);
-        continue;
-      }
+      if (!doc.deadline) continue;
 
-      // تحويل الموعد للتنسيق الصحيح (ثواني إلى ميللي ثانية)
       let docDeadline = new Date(typeof doc.deadline === 'number' ? doc.deadline * 1000 : doc.deadline);
-      
       const isUrgent = docDeadline <= in3Days;
-      debugInfo.push(`📄 الوثيقة: "${doc.title}" | الموعد: ${docDeadline.toLocaleDateString('ar-TN')} | عاجل؟: ${isUrgent ? 'نعم' : 'لا'}`);
+      
+      const statusMsg = `📄 الوثيقة: "${doc.title}" | الموعد: ${docDeadline.toLocaleDateString('ar-TN')} | عاجل؟: ${isUrgent ? 'نعم' : 'لا'}`;
+      debugInfo.push(statusMsg);
+      console.log(statusMsg);
 
       if (isUrgent) {
         try {
@@ -47,15 +47,17 @@ export async function checkAndSendDeadlineReminders(): Promise<{ sent: number; f
             doc.userId || 'admin'
           );
           sent++;
-          debugInfo.push(`✅ تم إرسال الإيميل للوثيقة: ${doc.title}`);
+          console.log(`✅ نداء إرسال الإيميل للوثيقة: ${doc.title}`);
         } catch (e: any) {
           failed++;
-          debugInfo.push(`❌ فشل الإرسال للوثيقة "${doc.title}": ${e.message}`);
+          console.error(`❌ فشل استدعاء الإرسال للوثيقة "${doc.title}":`, e.message);
         }
       }
     }
   } catch (e: any) {
-    debugInfo.push(`🚨 خطأ عام في قاعدة البيانات: ${e.message}`);
+    const errMsg = `🚨 خطأ عام في قاعدة البيانات: ${e.message}`;
+    debugInfo.push(errMsg);
+    console.error(errMsg);
   }
 
   return { sent, failed, debugInfo };

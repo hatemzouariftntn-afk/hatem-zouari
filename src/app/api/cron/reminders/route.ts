@@ -11,9 +11,11 @@ export async function GET(request: Request) {
     const cronSecret = process.env.CRON_SECRET || 'default-cron-secret';
 
     if (authHeader !== `Bearer ${cronSecret}`) {
+      console.warn('⚠️ محاولة استدعاء تنبيهات غير مصرح بها (Authorization failed)');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    console.log('🚀 بدء عملية فحص وإرسال المواعيد النهائية (Cron Job)...');
     const result = await checkAndSendDeadlineReminders();
     return NextResponse.json({
       success: true,
