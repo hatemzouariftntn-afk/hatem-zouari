@@ -5,9 +5,9 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || '');
 
 // Models to try in order of preference (fallback chain)
 const MODEL_CHAIN = [
-  'gemini-2.0-flash',
-  'gemini-2.0-flash-lite',
-  'gemini-flash-latest',
+  'gemini-1.5-flash',
+  'gemini-1.5-pro',
+  'gemini-1.0-pro',
 ];
 
 // Retry configuration
