@@ -5,6 +5,8 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || '');
 
 // Models to try in order of preference (fallback chain)
 const MODEL_CHAIN = [
+  'gemini-2.5-flash',
+  'gemini-flash-latest',
   'gemini-pro',
 ];
 
