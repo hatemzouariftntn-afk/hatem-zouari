@@ -126,8 +126,8 @@ export async function generateAIResponse(
               mimeType: mimeType
             }
           });
-        } else {
-          // Direct base64 content
+        } else if (documentContent.startsWith('/9j/') || documentContent.startsWith('iVBORw0K') || documentContent.startsWith('JVBERi0x')) {
+          // Direct base64 content (images or PDF)
           let mimeType = 'application/pdf'; // Default fallback
           if (documentContent.startsWith('/9j/')) mimeType = 'image/jpeg';
           else if (documentContent.startsWith('iVBORw0K')) mimeType = 'image/png';
@@ -138,6 +138,9 @@ export async function generateAIResponse(
               mimeType: mimeType
             }
           });
+        } else {
+          // Plain text content - add as text part
+          parts.push({ text: `\n\n--- محتوى الوثيقة ---\n${documentContent}\n--- نهاية الوثيقة ---` });
         }
       } catch (e) {
         console.error("Warning: Failed to process document for AI context", e);
